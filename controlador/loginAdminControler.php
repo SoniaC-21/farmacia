@@ -13,7 +13,7 @@ if (isset($_POST['login'])) {
 
     if ($usuario) {
         // Login exitoso → redirige a dashboard, inicio, etc.
-        header("Location: ../vista/panel.php");
+        header("Location: ../vista/panel_admin.php");
         exit();
     } else {
         echo "<h2>Usuario o contraseña incorrectos</h2>";
