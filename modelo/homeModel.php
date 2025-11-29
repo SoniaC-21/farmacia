@@ -42,7 +42,17 @@ class HomeModel {
         $stmt->execute();
                                                                                                
         return $stmt->fetch(PDO::FETCH_ASSOC);                                                 
-    }                                                                                          
+    }     
+    
+    public function emailExiste($email) {
+        $sql = "SELECT COUNT(*) FROM cliente WHERE email_cliente = :email";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+
+        return $stmt->fetchColumn() > 0; 
+    }
+
                                                                                                
 }                                                                                              
                                                                                                

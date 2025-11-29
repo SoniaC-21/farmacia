@@ -2,6 +2,8 @@
 
         include "../modelo/homeModel.php";
 
+$model = new HomeModel();
+
 if (isset($_POST['registro'])) {
 
     $nombre = $_POST['nombre'];
@@ -9,7 +11,11 @@ if (isset($_POST['registro'])) {
     $telefono = $_POST['telefono'];
     $password = $_POST['password'];
 
-    $model = new HomeModel();
+    if ($model->emailExiste($email)) {
+        echo "<h2 style='color:red;'>El correo <b>$email</b> ya está registrado.</h2>";
+        echo "<a href='../vista/registro.php'>Regresar al registro</a>";
+        exit();
+    }
 
     if ($model->registrarUsuario($nombre, $email, $telefono, $password)) {
         header("Location: /farmacia/vista/clientes.php");

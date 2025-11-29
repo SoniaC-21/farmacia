@@ -21,6 +21,10 @@
         <button type="submit" name="login">Entrar</button>
     </form>
 
+    <div class="enlace">
+        <br><a href="../">Volver a inicio</a>
+    </div>
+
 </div>
 
 </body>
