@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Bienvenido a FarmaBase</title>
-    <link rel="stylesheet" href="./estilos.css">
+    <link rel="stylesheet" href="./estilos_C.css">
     
 </head>
 <body>

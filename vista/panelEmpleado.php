@@ -4,273 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Empleado - Farmacia</title>
-    <link rel="stylesheet" href="../estilos.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: #1d6df7;
-            color: white;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
-
-        .sidebar h2 {
-            margin-bottom: 30px;
-            text-align: center;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-            padding-bottom: 15px;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 10px;
-        }
-
-        .sidebar-menu a {
-            display: block;
-            padding: 12px 15px;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: background 0.3s;
-        }
-
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background: rgba(255,255,255,0.2);
-        }
-
-        /* Contenido principal */
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        .header {
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            color: #1d6df7;
-            margin-bottom: 10px;
-        }
-
-        /* Secciones */
-        .section {
-            display: none;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        /* Tablas */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background: #1d6df7;
-            color: white;
-            font-weight: bold;
-        }
-
-        tr:hover {
-            background: #f9f9f9;
-        }
-
-        /* Formularios */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        /* Botones */
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-
-        .btn-primary {
-            background: #1d6df7;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #004be0;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-small {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-
-        /* Buscador */
-        .search-box {
-            margin-bottom: 20px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-        }
-
-        /* Alertas */
-        .alert {
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Modal para detalles de compra */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-        }
-
-        .close-modal:hover {
-            color: #333;
-        }
-
-        .actions-cell {
-            display: flex;
-            gap: 5px;
-        }
-
-        .stock-input {
-            width: 80px;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-    </style>
+    <link rel="stylesheet" href="estilos_empleado.css">
 </head>
 <body>
     <!-- Sidebar -->
@@ -280,6 +14,8 @@
             <li><a href="#" class="menu-item active" data-section="inventario">📦 Inventario</a></li>
             <li><a href="#" class="menu-item" data-section="compras">🛒 Compras</a></li>
             <li><a href="#" class="menu-item" data-section="agregar">➕ Agregar Producto</a></li>
+            <li><a href="#" class="menu-item" data-section="agregarCompra">🧾 Agregar Compra</a></li>
+            <li><a href="../">Cerrar sesión</a></li>
         </ul>
     </div>
 
@@ -296,26 +32,30 @@
                 <input type="text" id="buscarProducto" placeholder="Buscar producto por nombre...">
             </div>
             <div id="alert-inventario"></div>
-            <table id="tablaInventario">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Presentación</th>
-                        <th>Precio</th>
-                        <th>Cantidad</th>
-                        <th>Fecha Caducidad</th>
-                        <th>Requiere Receta</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tbodyInventario">
-                    <tr>
-                        <td colspan="8" style="text-align: center;">Cargando productos...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                <div class="table-responsive">
+                    <table id="tablaInventario">
+
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Presentación</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Fecha Caducidad</th>
+                                <th>Requiere Receta</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyInventario">
+                            <tr>
+                                <td colspan="8" style="text-align: center;">Cargando productos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
 
         <!-- Sección: Compras -->
         <div id="compras" class="section">
@@ -384,6 +124,31 @@
             </form>
         </div>
     </div>
+
+    <!-- Sección: Agregar Compra -->
+<div id="agregarCompra" class="section">
+    <h2>Registrar Nueva Compra</h2>
+    <div id="alert-agregar-compra"></div>
+
+    <form id="formAgregarCompra">
+        <div class="form-group">
+            <label>Fecha de Compra *</label>
+            <input type="date" id="fechaCompra" required>
+        </div>
+
+        <div class="form-group">
+            <label>ID Proveedor *</label>
+            <input type="number" id="idProveedorCompra" min="1" required>
+        </div>
+
+        <div class="form-group">
+            <label>Total de Compra *</label>
+            <input type="number" id="totalCompra" step="0.01" min="0" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registrar Compra</button>
+    </form>
+</div>
 
     <!-- Modal para Detalles de Compra -->
     <div id="modalDetalle" class="modal">
@@ -459,7 +224,8 @@
                 return `
                 <tr>
                     <td>${producto.id_producto}</td>
-                    <td>${producto.nombre_producto}</td>
+                    
+                    <td title="${producto.nombre_producto}">${producto.nombre_producto}</td>
                     <td>${producto.presentacion_producto || '-'}</td>
                     <td>$${parseFloat(producto.precio_producto || 0).toFixed(2)}</td>
                     <td>
@@ -693,6 +459,44 @@
                 mostrarAlerta('alert-agregar', 'Error al agregar producto', 'error');
             });
         });
+
+        // Formulario agregar compra
+document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const fecha = document.getElementById('fechaCompra').value;
+    const proveedor = document.getElementById('idProveedorCompra').value;
+    const total = document.getElementById('totalCompra').value;
+
+    const body = `accion=agregar_compra&fecha_compra=${fecha}&id_proveedor=${proveedor}&total_compra=${total}`;
+
+    fetch('../controlador/panelEmpleadoControler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarAlerta('alert-agregar-compra', 'Compra registrada correctamente', 'success');
+
+            // Reset form
+            document.getElementById('formAgregarCompra').reset();
+
+            // Cambiar a sección compras y recargar tabla
+            setTimeout(() => {
+                document.querySelector('[data-section="compras"]').click();
+            }, 1000);
+        } else {
+            mostrarAlerta('alert-agregar-compra', data.message || 'Error al registrar compra', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('alert-agregar-compra', 'Error al registrar compra', 'error');
+    });
+});
+
 
         // Buscar producto
         document.getElementById('buscarProducto').addEventListener('input', function() {

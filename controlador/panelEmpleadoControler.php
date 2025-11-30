@@ -126,7 +126,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             
                 echo json_encode(['success' => true, 'message' => 'Compra registrada correctamente']);
                 exit();
-            
+                
+                case 'agregar_compra':
+
+                    $fecha = $_POST['fecha_compra'] ?? '';
+                    $proveedor = $_POST['id_proveedor'] ?? 0;
+                    $total = $_POST['total_compra'] ?? 0;
+                
+                    // Validaciones
+                    if (empty($fecha)) {
+                        echo json_encode(['success' => false, 'message' => 'Debe ingresar la fecha de compra']);
+                        exit();
+                    }
+                
+                    if ($proveedor <= 0) {
+                        echo json_encode(['success' => false, 'message' => 'Debe seleccionar un proveedor válido']);
+                        exit();
+                    }
+                
+                    if ($total <= 0) {
+                        echo json_encode(['success' => false, 'message' => 'El total debe ser mayor a 0']);
+                        exit();
+                    }
+                
+                    // Llamar al modelo
+                    $resultado = $model->agregarCompra($fecha, $proveedor, $total);
+                
+                    echo json_encode([
+                        'success' => $resultado, 
+                        'message' => $resultado ? 'Compra registrada correctamente' : 'Error al registrar compra'
+                    ]);
+                    exit();
+                
             
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);

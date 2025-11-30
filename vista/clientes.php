@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Iniciar Sesión</title>
-    <link rel="stylesheet" href="../estilos.css">
+    <link rel="stylesheet" href="../estilos_C.css">
 </head>
 <body>
 
@@ -26,7 +26,8 @@
     </form>
 
     <div class="enlace">
-        <a href="registro.php">¿No tienes cuenta? Regístrate</a>
+        <a href="registro.php">¿No tienes cuenta? Regístrate</a><br>
+        <br><a href="../">Volver a inicio</a>
     </div>
 </div>
 
