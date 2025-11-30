@@ -14,6 +14,7 @@
             <li><a href="#" class="menu-item active" data-section="inventario">📦 Inventario</a></li>
             <li><a href="#" class="menu-item" data-section="compras">🛒 Compras</a></li>
             <li><a href="#" class="menu-item" data-section="agregar">➕ Agregar Producto</a></li>
+            <li><a href="#" class="menu-item" data-section="agregarCompra">🧾 Agregar Compra</a></li>
             <li><a href="../">Cerrar sesión</a></li>
         </ul>
     </div>
@@ -123,6 +124,31 @@
             </form>
         </div>
     </div>
+
+    <!-- Sección: Agregar Compra -->
+<div id="agregarCompra" class="section">
+    <h2>Registrar Nueva Compra</h2>
+    <div id="alert-agregar-compra"></div>
+
+    <form id="formAgregarCompra">
+        <div class="form-group">
+            <label>Fecha de Compra *</label>
+            <input type="date" id="fechaCompra" required>
+        </div>
+
+        <div class="form-group">
+            <label>ID Proveedor *</label>
+            <input type="number" id="idProveedorCompra" min="1" required>
+        </div>
+
+        <div class="form-group">
+            <label>Total de Compra *</label>
+            <input type="number" id="totalCompra" step="0.01" min="0" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registrar Compra</button>
+    </form>
+</div>
 
     <!-- Modal para Detalles de Compra -->
     <div id="modalDetalle" class="modal">
@@ -433,6 +459,44 @@
                 mostrarAlerta('alert-agregar', 'Error al agregar producto', 'error');
             });
         });
+
+        // Formulario agregar compra
+document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const fecha = document.getElementById('fechaCompra').value;
+    const proveedor = document.getElementById('idProveedorCompra').value;
+    const total = document.getElementById('totalCompra').value;
+
+    const body = `accion=agregar_compra&fecha_compra=${fecha}&id_proveedor=${proveedor}&total_compra=${total}`;
+
+    fetch('../controlador/panelEmpleadoControler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarAlerta('alert-agregar-compra', 'Compra registrada correctamente', 'success');
+
+            // Reset form
+            document.getElementById('formAgregarCompra').reset();
+
+            // Cambiar a sección compras y recargar tabla
+            setTimeout(() => {
+                document.querySelector('[data-section="compras"]').click();
+            }, 1000);
+        } else {
+            mostrarAlerta('alert-agregar-compra', data.message || 'Error al registrar compra', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarAlerta('alert-agregar-compra', 'Error al registrar compra', 'error');
+    });
+});
+
 
         // Buscar producto
         document.getElementById('buscarProducto').addEventListener('input', function() {

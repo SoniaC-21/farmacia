@@ -12,6 +12,29 @@ if (!isset($_SESSION['empleado_id'])) {
 
 $model = new EmpleadoModel();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnAgregarProducto'])) {
+
+    $data = [
+        'nombre'       => $_POST['nombre_producto'],
+        'presentacion' => $_POST['presentacion'],
+        'precio'       => $_POST['precio'],
+        'cantidad'     => $_POST['cantidad'],
+        'caducidad'    => $_POST['fecha_caducidad'],
+        'proveedor'    => $_POST['id_proveedor'],
+        'receta'       => isset($_POST['requiere_receta']) ? 1 : 0
+    ];
+
+    $ok = $empleadoModel->agregarProductoConCompra($data);
+
+    if ($ok) {
+        echo "<script>alert('Producto y compra registrados correctamente');</script>";
+    } else {
+        echo "<script>alert('Error al registrar compra/producto');</script>";
+    }
+}
+
+
+
 // Manejar acciones AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     header('Content-Type: application/json');
@@ -25,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             exit();
             
         case 'agregar_producto':
+
             $nombre = $_POST['nombre'] ?? '';
             $precio = $_POST['precio'] ?? 0;
             $cantidad = $_POST['cantidad'] ?? 0;
@@ -32,27 +56,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $fecha_caducidad = $_POST['fecha_caducidad'] ?? null;
             $id_proveedor = $_POST['id_proveedor'] ?? null;
             $necesita_receta = isset($_POST['necesita_receta']) ? 1 : 0;
-            
-            if (empty($nombre) || $precio <= 0) {
+
+            if (empty($nombre) || $precio <= 0 || $cantidad <= 0) {
                 echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
                 exit();
             }
-            
-            // Si fecha_caducidad está vacía, establecer como null
-            if (empty($fecha_caducidad)) {
-                $fecha_caducidad = null;
-            }
-            
-            // Si id_proveedor está vacío, establecer como null
+
             if (empty($id_proveedor) || $id_proveedor <= 0) {
-                echo json_encode(['success' => false, 'message' => 'Debe seleccionar un proveedor válido']);
+                echo json_encode(['success' => false, 'message' => 'Debe seleccionar un proveedor']);
                 exit();
             }
-            
-            
-            $resultado = $model->agregarProducto($nombre, $precio, $cantidad, $presentacion, $fecha_caducidad, $id_proveedor, $necesita_receta);
-            echo json_encode(['success' => $resultado, 'message' => $resultado ? 'Producto agregado correctamente' : 'Error al agregar producto']);
-            exit();
+
+            try {
+
+                // 1️⃣ Registrar producto
+                $id_producto = $model->agregarProducto(
+                    $nombre,
+                    $precio,
+                    $cantidad,
+                    $presentacion,
+                    $fecha_caducidad,
+                    $id_proveedor,
+                    $necesita_receta
+                );
+
+                if (!$id_producto) {
+                    echo json_encode(['success' => false, 'message' => 'Error al registrar producto']);
+                    exit();
+                }
+
+                // 2️⃣ Registrar compra automática
+                $total_compra = $precio * $cantidad;
+                $id_compra = $model->registrarCompraProveedor($id_proveedor, $total_compra);
+
+                // 3️⃣ Registrar detalle de compra
+                $model->registrarDetalleCompra(
+                    $id_compra,
+                    $id_producto,
+                    $cantidad,
+                    $precio
+                );
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Producto y compra registrados correctamente'
+                ]);
+                exit();
+
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                exit();
+            }
+
+
             
         case 'eliminar_producto':
             $id = $_POST['id'] ?? 0;
@@ -126,7 +182,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             
                 echo json_encode(['success' => true, 'message' => 'Compra registrada correctamente']);
                 exit();
-            
+                
+                case 'agregar_compra':
+
+                    $fecha = $_POST['fecha_compra'] ?? '';
+                    $proveedor = $_POST['id_proveedor'] ?? 0;
+                    $total = $_POST['total_compra'] ?? 0;
+                
+                    // Validaciones
+                    if (empty($fecha)) {
+                        echo json_encode(['success' => false, 'message' => 'Debe ingresar la fecha de compra']);
+                        exit();
+                    }
+                
+                    if ($proveedor <= 0) {
+                        echo json_encode(['success' => false, 'message' => 'Debe seleccionar un proveedor válido']);
+                        exit();
+                    }
+                
+                    if ($total <= 0) {
+                        echo json_encode(['success' => false, 'message' => 'El total debe ser mayor a 0']);
+                        exit();
+                    }
+                
+                    // Llamar al modelo
+                    $resultado = $model->agregarCompra($fecha, $proveedor, $total);
+                
+                    echo json_encode([
+                        'success' => $resultado, 
+                        'message' => $resultado ? 'Compra registrada correctamente' : 'Error al registrar compra'
+                    ]);
+                    exit();
+                
             
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);

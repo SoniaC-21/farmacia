@@ -29,8 +29,13 @@ class EmpleadoModel {
 
     // Agregar nuevo producto
     public function agregarProducto($nombre, $precio, $cantidad, $presentacion, $fecha_caducidad, $id_proveedor, $necesita_receta) {
-        $sql = "INSERT INTO producto (nombre_producto, precio_producto, cantidad_existente, presentacion_producto, fecha_caducidad, id_proveedor, necesita_receta) 
-                VALUES (:nombre, :precio, :cantidad, :presentacion, :fecha_caducidad, :id_proveedor, :necesita_receta)";
+
+        $sql = "INSERT INTO producto 
+                (nombre_producto, precio_producto, cantidad_existente, presentacion_producto,
+                fecha_caducidad, id_proveedor, necesita_receta)
+                VALUES (:nombre, :precio, :cantidad, :presentacion, :fecha_caducidad, 
+                        :id_proveedor, :necesita_receta)";
+
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':nombre', $nombre);
         $stmt->bindParam(':precio', $precio);
@@ -39,8 +44,101 @@ class EmpleadoModel {
         $stmt->bindParam(':fecha_caducidad', $fecha_caducidad);
         $stmt->bindParam(':id_proveedor', $id_proveedor);
         $stmt->bindParam(':necesita_receta', $necesita_receta);
+
+        if ($stmt->execute()) {
+            return $this->db->lastInsertId(); // ID REAL
+        }
+
+        return false;
+    }
+
+    public function registrarCompraProveedor($id_proveedor, $total)
+    {
+        $sql = "INSERT INTO compra_producto (fecha_compra, id_proveedor, total_compra)
+                VALUES (NOW(), :id_proveedor, :total)";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_proveedor', $id_proveedor);
+        $stmt->bindParam(':total', $total);
+        $stmt->execute();
+
+        return $this->db->lastInsertId();
+    }
+
+    public function registrarDetalleCompra($id_compra, $id_producto, $cantidad, $precio)
+    {
+        $sql = "INSERT INTO detalles_compra
+                (id_compra, id_producto, cantidad, precio_compra_producto)
+                VALUES (:id_compra, :id_producto, :cantidad, :precio)";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id_compra', $id_compra);
+        $stmt->bindParam(':id_producto', $id_producto);
+        $stmt->bindParam(':cantidad', $cantidad);
+        $stmt->bindParam(':precio', $precio);
         return $stmt->execute();
     }
+
+
+
+    public function agregarProductoConCompra($data) {
+        try {
+            // -------------- INICIAR TRANSACCIÓN --------------------
+            $this->db->beginTransaction();
+
+            // -------------- 1) INSERTAR PRODUCTO --------------------
+            $sqlProducto = "INSERT INTO producto 
+                (nombre_producto, presentacion_producto, precio_producto, cantidad_existente, 
+                fecha_caducidad, id_proveedor, necesita_receta)
+                VALUES (:nombre, :presentacion, :precio, :cantidad, :caducidad, :proveedor, :receta)";
+
+            $stmt = $this->db->prepare($sqlProducto);
+            $stmt->execute([
+                ':nombre'       => $data['nombre'],
+                ':presentacion' => $data['presentacion'],
+                ':precio'       => $data['precio'],
+                ':cantidad'     => $data['cantidad'],
+                ':caducidad'    => $data['caducidad'],
+                ':proveedor'    => $data['proveedor'],
+                ':receta'       => $data['receta']
+            ]);
+
+            $id_producto = $this->db->lastInsertId();
+
+            // -------------- 2) INSERTAR COMPRA --------------------
+            $total_compra = $data['precio'] * $data['cantidad'];
+
+            $sqlCompra = "INSERT INTO compra (fecha_compra, total_compra)
+                        VALUES (NOW(), :total)";
+
+            $stmt = $this->db->prepare($sqlCompra);
+            $stmt->execute([':total' => $total_compra]);
+
+            $id_compra = $this->db->lastInsertId();
+
+            // -------------- 3) INSERTAR DETALLE --------------------
+            $sqlDetalle = "INSERT INTO detalle_compra 
+                        (id_compra, id_producto, cantidad, precio_compra_producto)
+                        VALUES (:compra, :producto, :cantidad, :precio)";
+
+            $stmt = $this->db->prepare($sqlDetalle);
+            $stmt->execute([
+                ':compra'   => $id_compra,
+                ':producto' => $id_producto,
+                ':cantidad' => $data['cantidad'],
+                ':precio'   => $data['precio']
+            ]);
+
+            // -------------- CONFIRMAR --------------------
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
 
     // Eliminar producto
     public function eliminarProducto($id) {
@@ -110,6 +208,15 @@ class EmpleadoModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}
 
+    public function agregarCompra($fecha_compra, $id_proveedor, $total_compra) {
+        $sql = "INSERT INTO compra_producto (fecha_compra, id_proveedor, total_compra) 
+                VALUES (:fecha_compra, :id_proveedor, :total_compra)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':fecha_compra', $fecha_compra);
+        $stmt->bindParam(':id_proveedor', $id_proveedor);
+        $stmt->bindParam(':total_compra', $total_compra);
+        return $stmt->execute();
+    }
+}
 ?>       
