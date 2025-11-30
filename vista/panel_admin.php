@@ -42,6 +42,10 @@
 
             <button type="submit" name="registrar_empleado">Registrar Empleado</button>
         </form>
+        <div class="enlace">
+            <br><a href="../vista/admin.php">Salir</a>
+        </div>
+
 
     </div>
 
