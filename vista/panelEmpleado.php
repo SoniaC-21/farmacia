@@ -14,6 +14,7 @@
             <li><a href="#" class="menu-item active" data-section="inventario">📦 Inventario</a></li>
             <li><a href="#" class="menu-item" data-section="compras">🛒 Compras</a></li>
             <li><a href="#" class="menu-item" data-section="agregar">➕ Agregar Producto</a></li>
+            <li><a href="../">Cerrar sesión</a></li>
         </ul>
     </div>
 
