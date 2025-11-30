@@ -7,13 +7,17 @@ if (isset($_POST['login'])) {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $model = new HomeModel();
+    $model = new EmpleadoModel();
 
     $usuario = $model->validarLogin($email, $password);
 
     if ($usuario) {
-        // Login exitoso → redirige a dashboard, inicio, etc.
-        header("Location: ../vista/panel.php");
+        // Iniciar sesión
+        session_start();
+        $_SESSION['empleado_id'] = $usuario['id_empleado'];
+        $_SESSION['empleado_nombre'] = $usuario['nombre_empleado'] ?? 'Empleado';
+        // Login exitoso → redirige a dashboard
+        header("Location: ../vista/panelEmpleado.php");
         exit();
     } else {
         echo "<h2>Usuario o contraseña incorrectos</h2>";
