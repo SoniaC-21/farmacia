@@ -15,6 +15,7 @@
 
             $sql = "SELECT * FROM `admin` WHERE email = :email AND  `password` = :password";
 
+<<<<<<< HEAD
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':password', $password);
@@ -24,4 +25,15 @@
     } 
                                                                                     
 }                                                                                                                                                                                      
+=======
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':password', $password);
+            $stmt->execute();
+                                                                                                
+            return $stmt->fetch(PDO::FETCH_ASSOC);                                                 
+        }                                                                                          
+                                                                                                
+    }                                                                                                                                                                                     
+>>>>>>> origin/main
 ?>       
