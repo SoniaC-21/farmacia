@@ -13,6 +13,7 @@
         <ul class="sidebar-menu">
             <li><a href="#" class="menu-item active" data-section="inventario">📦 Inventario</a></li>
             <li><a href="#" class="menu-item" data-section="compras">🛒 Compras</a></li>
+            <li><a href="#" class="menu-item" data-section="ventas">💰 Ventas</a></li>
             <li><a href="#" class="menu-item" data-section="agregar">➕ Agregar Producto</a></li>
             <li><a href="#" class="menu-item" data-section="agregarCompra">🧾 Agregar Compra</a></li>
             <li><a href="../">Cerrar sesión</a></li>
@@ -78,6 +79,32 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Sección: Ventas -->
+        <div id="ventas" class="section">
+            <h2>Historial de Ventas</h2>
+            <div id="alert-ventas"></div>
+
+            <table id="tablaVentas">
+                <thead>
+                    <tr>
+                        <th>ID Venta</th>
+                        <th>Fecha</th>
+                        <th>ID Cliente</th>
+                        <th>Total</th>
+                        <th>Opciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyVentas">
+                    <tr>
+                        <td colspan="4" style="text-align:center;">
+                            Cargando ventas...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
 
         <!-- Sección: Agregar Producto -->
         <div id="agregar" class="section">
@@ -150,11 +177,11 @@
     </form>
 </div>
 
-    <!-- Modal para Detalles de Compra -->
+    <!-- Modal para Detalles de Compra/Venta -->
     <div id="modalDetalle" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Detalles de la Compra</h3>
+                <h3 id="tituloModalDetalle">Detalles</h3>
                 <button class="close-modal" onclick="cerrarModal()">&times;</button>
             </div>
             <div id="contenidoDetalle"></div>
@@ -179,9 +206,14 @@
                 // Cargar datos según la sección
                 if (section === 'inventario') {
                     cargarInventario();
-                } else if (section === 'compras') {
+                } 
+                else if (section === 'compras') {
                     cargarCompras();
+                } 
+                else if (section === 'ventas') {
+                    cargarVentas();
                 }
+
             });
         });
 
@@ -318,6 +350,51 @@
                 mostrarAlerta('alert-compras', 'Error al cargar compras', 'error');
             });
         }
+        
+        // Cargar ventas
+        function cargarVentas() {
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'accion=obtener_ventas'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarVentas(data.data);
+                } else {
+                    mostrarAlerta('alert-ventas', 'Error al cargar ventas', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('alert-ventas', 'Error al cargar ventas', 'error');
+            });
+        }
+
+
+        // Mostrar ventas en tabla
+        function mostrarVentas(ventas) {
+            const tbody = document.getElementById('tbodyVentas');
+
+            if (ventas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No hay ventas registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = ventas.map(v => `
+                <tr>
+                    <td>${v.id_venta}</td>
+                    <td>${v.fecha_venta || v.fecha}</td>
+                    <td>${v.id_cliente}</td>
+                    <td>$${parseFloat(v.total_venta || 0).toFixed(2)}</td>
+                    <td><button class="btn btn-primary btn-small" onclick="verDetalleVenta(${v.id_venta})">Ver detalles</button></td>
+                </tr>
+            `).join('');
+        }
+
 
         // Mostrar compras en tabla
         function mostrarCompras(compras) {
@@ -366,26 +443,68 @@
             });
         }
 
+        // Ver detalles de venta
+        function verDetalleVenta(idVenta) {
+            const formData = new FormData();
+            formData.append("accion", "obtener_detalle_venta");
+            formData.append("id_venta", idVenta);
+
+            fetch("../controlador/panelEmpleadoControler.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (!data.success) {
+                    alert("Error al cargar detalles: " + (data.message || "Error desconocido"));
+                    return;
+                }
+
+                mostrarModalDetalleVenta(data.data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Error al cargar detalles de la venta");
+            });
+        }
+
+
         // Mostrar detalles de compra en modal
         function mostrarDetalleCompra(detalles) {
+            const modal = document.getElementById('modalDetalle');
+            const titulo = document.getElementById('tituloModalDetalle');
             const contenido = document.getElementById('contenidoDetalle');
+            
+            if (!modal || !titulo || !contenido) {
+                alert("Error: No se encontraron los elementos del modal");
+                return;
+            }
+
+            titulo.innerText = "Detalle de Compra";
             
             if (detalles.length === 0) {
                 contenido.innerHTML = '<p>No hay detalles disponibles</p>';
+                modal.classList.add('active');
                 return;
             }
             
-            let html = '<table><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Subtotal</th></tr></thead><tbody>';
+            let html = '<table class="tabla-detalle"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Subtotal</th></tr></thead><tbody>';
             let total = 0;
             
             detalles.forEach(detalle => {
-                const precio = detalle.precio || detalle.precio_producto || 0;
-                const subtotal = parseFloat(detalle.cantidad) * parseFloat(precio);
+                const precio = detalle.precio || detalle.precio_producto || detalle.precio_compra_producto || 0;
+                const cantidad = parseFloat(detalle.cantidad || 0);
+                const subtotal = parseFloat(precio) * cantidad;
                 total += subtotal;
                 html += `
                     <tr>
-                        <td>${detalle.nombre_producto}</td>
-                        <td>${detalle.cantidad}</td>
+                        <td>${detalle.nombre_producto || '-'}</td>
+                        <td>${cantidad}</td>
                         <td>$${parseFloat(precio).toFixed(2)}</td>
                         <td>$${subtotal.toFixed(2)}</td>
                     </tr>
@@ -396,7 +515,53 @@
             html += `<p style="margin-top: 20px; font-weight: bold; font-size: 18px;">Total: $${total.toFixed(2)}</p>`;
             
             contenido.innerHTML = html;
+            modal.classList.add('active');
         }
+
+        function mostrarModalDetalleVenta(detalles) {
+            const modal = document.getElementById("modalDetalle");
+            const titulo = document.getElementById("tituloModalDetalle");
+            const contenido = document.getElementById("contenidoDetalle");
+
+            if (!modal || !titulo || !contenido) {
+                alert("Error: No se encontraron los elementos del modal");
+                return;
+            }
+
+            titulo.innerText = "Detalle de Venta";
+
+            if (detalles.length === 0) {
+                contenido.innerHTML = '<p>No hay detalles disponibles</p>';
+                modal.classList.add('active');
+                return;
+            }
+
+            let html = '<table class="tabla-detalle"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Subtotal</th></tr></thead><tbody>';
+            let total = 0;
+
+            detalles.forEach(d => {
+                const precio = parseFloat(d.precio_venta_producto || 0);
+                const cantidad = parseFloat(d.cantidad || 0);
+                const subtotal = precio * cantidad;
+                total += subtotal;
+                
+                html += `
+                    <tr>
+                        <td>${d.nombre_producto || '-'}</td>
+                        <td>${cantidad}</td>
+                        <td>$${precio.toFixed(2)}</td>
+                        <td>$${subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            html += `<p style="margin-top: 20px; font-weight: bold; font-size: 18px;">Total: $${total.toFixed(2)}</p>`;
+
+            contenido.innerHTML = html;
+            modal.classList.add('active');
+        }
+
 
         // Cerrar modal
         function cerrarModal() {

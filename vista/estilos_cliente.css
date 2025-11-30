@@ -108,3 +108,27 @@ tr:hover {
     border-bottom: 1px solid #ddd;
 }
 
+.barra-busqueda {
+    margin-bottom: 15px;
+}
+
+.barra-busqueda input {
+    padding: 8px;
+    width: 60%;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.barra-busqueda button {
+    padding: 8px 12px;
+    border-radius: 5px;
+    background-color: #2d7dfc;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.barra-busqueda button:hover {
+    background-color: #215dcc;
+}
+

@@ -304,3 +304,47 @@ tr:hover {
 #tablaCompras {
     min-width: 900px;
 }
+
+/* Estilos para tabla de detalles en modal */
+.tabla-detalle {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.tabla-detalle th {
+    background: #1d6df7;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.tabla-detalle td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabla-detalle tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.tabla-detalle tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Botón ver detalles */
+.btn-detalle {
+    padding: 6px 12px;
+    background: #1d6df7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.btn-detalle:hover {
+    background: #004be0;
+}

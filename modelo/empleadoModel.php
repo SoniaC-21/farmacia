@@ -218,5 +218,87 @@ class EmpleadoModel {
         $stmt->bindParam(':total_compra', $total_compra);
         return $stmt->execute();
     }
+
+    public function obtenerVentas() {
+        $sql = "SELECT 
+                    v.id_venta,
+                    v.fecha_venta,
+                    v.id_cliente,
+                    v.total_venta
+                FROM venta v
+                ORDER BY v.fecha_venta DESC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    public function registrarVenta($idEmpleado, $idCliente, $idProducto, $cantidad)
+    {
+        try {
+            $db = $this->db; 
+            $db->beginTransaction();
+
+            // Obtener precio y stock
+            $stmt = $db->prepare("SELECT precio_producto, cantidad_existente 
+                                FROM producto 
+                                WHERE id_producto = ?");
+            $stmt->execute([$idProducto]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$producto) {
+                return ['success'=>false, 'message'=>'Producto no encontrado'];
+            }
+
+            if ($producto['cantidad_existente'] < $cantidad) {
+                return ['success'=>false, 'message'=>'No hay suficiente stock'];
+            }
+
+            $precio = $producto['precio_producto'];
+            $total = $precio * $cantidad;
+
+            // Insertar venta
+            $stmt = $db->prepare("INSERT INTO venta 
+                (fecha_venta, id_empleado, id_cliente, total_venta)
+                VALUES (CURDATE(), ?, ?, ?)");
+            $stmt->execute([$idEmpleado, $idCliente, $total]);
+
+            $idVenta = $db->lastInsertId();
+
+            // Insertar detalle venta
+            $stmt = $db->prepare("INSERT INTO detalles_venta 
+                (id_venta, id_producto, cantidad, precio_venta_producto)
+                VALUES (?, ?, ?, ?)");
+            $stmt->execute([$idVenta, $idProducto, $cantidad, $precio]);
+
+            // Actualizar stock
+            $stmt = $db->prepare("UPDATE producto
+                                SET cantidad_existente = cantidad_existente - ?
+                                WHERE id_producto = ?");
+            $stmt->execute([$cantidad, $idProducto]);
+
+            $db->commit();
+
+            return ['success'=>true];
+
+        } catch (Exception $e) {
+            $db->rollBack();
+            return ['success'=>false, 'message'=>$e->getMessage()];
+        }
+    }
+
+    public function obtenerDetalleVenta($idVenta) {
+        $sql = "SELECT dv.*, p.nombre_producto
+                FROM detalles_venta dv
+                INNER JOIN producto p ON dv.id_producto = p.id_producto
+                WHERE dv.id_venta = :id";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $idVenta);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
 ?>       
