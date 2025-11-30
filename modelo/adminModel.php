@@ -1,27 +1,27 @@
 <?php
 
-include "conexion.php";
+    //include "conexion.php";
+    include_once __DIR__ . "/conexion.php";
 
-class HomeModel {
+    class HomeModel {
 
-    private $db;
+        private $db;
 
-    public function __construct() {
-        $this->db = conecta();
-    }
+        public function __construct() {
+            $this->db = conecta();
+        }
 
-    public function validarLogin($email, $password) {
+        public function validarLogin($email, $password) {
 
-        $sql = "SELECT * FROM `admin` WHERE email = :email AND  `password` = :password";
+            $sql = "SELECT * FROM `admin` WHERE email = :email AND  `password` = :password";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':email', $email);
-        $stmt->bindParam(':password', $password);
-        $stmt->execute();
-                                                                                               
-        return $stmt->fetch(PDO::FETCH_ASSOC);                                                 
-    }                                                                                          
-                                                                                               
-}                                                                                              
-                                                                                               
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':email', $email);
+            $stmt->bindParam(':password', $password);
+            $stmt->execute();
+                                                                                                
+            return $stmt->fetch(PDO::FETCH_ASSOC);                                                 
+        }                                                                                          
+                                                                                                
+    }                                                                                                                                                                                     
 ?>       

@@ -89,3 +89,102 @@ button:hover {
 .enlace a:hover {
     text-decoration: underline;
 }
+
+/* ====== SOLO PARA EL PANEL DE ADMIN ====== */
+.body-panel {
+    display: block;          /* quitamos el flex del body en esta vista */
+    height: auto;            /* que pueda crecer más de 100vh */
+    min-height: 100vh;
+    padding: 40px 0;         /* espacio arriba y abajo */
+}
+
+/* centramos el panel en la página */
+.contenedor-panel {
+    display: flex;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;          /* centrado horizontal */
+}
+
+.contenedor {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px 50px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/*que se ocupe la mitad del alcho*/
+.formulario-empleado,
+.lista-empleados{
+    flex: 1;
+}
+
+.formulario-empleado h1,
+.lista-empleados h1 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.lista-empleados {
+    display: flex;
+    flex-direction: column;
+}
+
+.formulario-empleado h1,
+.lista-empleados h1 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.tabla-wrapper {
+    margin-top: 10px;
+    /*width: 100%;*/
+    flex: 1;  
+    overflow-x: auto;   /* scroll horizontal */
+}
+
+.tabla-empleados {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.tabla-empleados thead {
+    background-color: #f0f4ff;
+    position: sticky;
+    top: 0;                 /* header de la tabla se queda fijo arriba del scroll */
+    z-index: 1;
+}
+
+.tabla-empleados th,
+.tabla-empleados td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+}
+
+.tabla-empleados th {
+    font-weight: 600;
+}
+
+.tabla-empleados tr:nth-child(even) {
+    background-color: #fafbff;
+}
+
+.btn-eliminar {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: #ff4d4f;
+    color: #fff;
+    font-size: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-eliminar:hover {
+    background-color: #d9363e;
+}
