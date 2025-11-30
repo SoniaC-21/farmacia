@@ -154,6 +154,30 @@ switch ($accion) {
         echo json_encode(["success" => true, "data" => $detalle]);
         break;
 
+    case 'obtener_clientes':
+        $clientes = $model->obtenerClientes();
+        echo json_encode(["success" => true, "data" => $clientes]);
+        break;
+
+    case 'registrar_venta_completa':
+        $idCliente = $_POST['id_cliente'] ?? 0;
+        $productos = json_decode($_POST['productos'], true) ?? [];
+
+        if ($idCliente <= 0) {
+            echo json_encode(["success" => false, "message" => "Debe seleccionar un cliente"]);
+            exit();
+        }
+
+        if (empty($productos)) {
+            echo json_encode(["success" => false, "message" => "Debe agregar al menos un producto"]);
+            exit();
+        }
+
+        $idEmpleado = $_SESSION['empleado_id'];
+        $resultado = $model->registrarVentaCompleta($idEmpleado, $idCliente, $productos);
+        echo json_encode($resultado);
+        break;
+
 
 
     /* ------------------------------

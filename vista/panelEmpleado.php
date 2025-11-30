@@ -16,6 +16,7 @@
             <li><a href="#" class="menu-item" data-section="ventas">💰 Ventas</a></li>
             <li><a href="#" class="menu-item" data-section="agregar">➕ Agregar Producto</a></li>
             <li><a href="#" class="menu-item" data-section="agregarCompra">🧾 Agregar Compra</a></li>
+            <li><a href="#" class="menu-item" data-section="agregarVenta">💵 Agregar Venta</a></li>
             <li><a href="../">Cerrar sesión</a></li>
         </ul>
     </div>
@@ -150,32 +151,70 @@
                 <button type="submit" class="btn btn-primary">Agregar Producto</button>
             </form>
         </div>
+    
+
+        <!-- Sección: Agregar Compra -->
+        <div id="agregarCompra" class="section">
+            <h2>Registrar Nueva Compra</h2>
+            <div id="alert-agregar-compra"></div>
+
+            <form id="formAgregarCompra">
+                <div class="form-group">
+                    <label>Fecha de Compra *</label>
+                    <input type="date" id="fechaCompra" required>
+                </div>
+
+                <div class="form-group">
+                    <label>ID Proveedor *</label>
+                    <input type="number" id="idProveedorCompra" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Total de Compra *</label>
+                    <input type="number" id="totalCompra" step="0.01" min="0" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Compra</button>
+            </form>
+        </div>
+
+        <!-- Sección: Agregar Venta -->
+        <div id="agregarVenta" class="section">
+            <h2>Registrar Nueva Venta</h2>
+            <div id="alert-agregar-venta"></div>
+
+            <form id="formAgregarVenta">
+                <div class="form-group">
+                    <label>Cliente *</label>
+                    <select id="clienteVenta" required>
+                        <option value="">Seleccione un cliente...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Buscar Producto</label>
+                    <div class="search-container">
+                        <input type="text" id="buscarProductoVenta" placeholder="Buscar por nombre...">
+                        <button type="button" class="btn btn-primary" onclick="buscarProductoParaVenta()">Buscar</button>
+                    </div>
+                </div>
+
+                <div id="resultadosBusquedaVenta"></div>
+
+                <h3>Productos en la Venta</h3>
+                <div id="productosVenta">
+                    <p>No hay productos agregados</p>
+                </div>
+
+                <div class="total-box">
+                    <strong>Total: $<span id="totalVenta">0.00</span></strong>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnRegistrarVenta" disabled>Registrar Venta</button>
+            </form>
+        </div>
+
     </div>
-
-    <!-- Sección: Agregar Compra -->
-<div id="agregarCompra" class="section">
-    <h2>Registrar Nueva Compra</h2>
-    <div id="alert-agregar-compra"></div>
-
-    <form id="formAgregarCompra">
-        <div class="form-group">
-            <label>Fecha de Compra *</label>
-            <input type="date" id="fechaCompra" required>
-        </div>
-
-        <div class="form-group">
-            <label>ID Proveedor *</label>
-            <input type="number" id="idProveedorCompra" min="1" required>
-        </div>
-
-        <div class="form-group">
-            <label>Total de Compra *</label>
-            <input type="number" id="totalCompra" step="0.01" min="0" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Registrar Compra</button>
-    </form>
-</div>
 
     <!-- Modal para Detalles de Compra/Venta -->
     <div id="modalDetalle" class="modal">
@@ -212,6 +251,11 @@
                 } 
                 else if (section === 'ventas') {
                     cargarVentas();
+                }
+                else if (section === 'agregarVenta') {
+                    cargarClientes();
+                    productosVentaLista = [];
+                    actualizarListaProductosVenta();
                 }
 
             });
@@ -625,6 +669,241 @@
             });
         });
 
+        // Variables globales para venta
+        let productosVentaLista = [];
+
+        // Cargar clientes
+        function cargarClientes() {
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'accion=obtener_clientes'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const select = document.getElementById('clienteVenta');
+                    select.innerHTML = '<option value="">Seleccione un cliente...</option>';
+                    data.data.forEach(cliente => {
+                        const option = document.createElement('option');
+                        option.value = cliente.id_cliente;
+                        option.textContent = `${cliente.nombre_cliente} (${cliente.email_cliente})`;
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Buscar producto para venta
+        function buscarProductoParaVenta() {
+            const nombre = document.getElementById('buscarProductoVenta').value.trim();
+            
+            if (nombre.length === 0) {
+                document.getElementById('resultadosBusquedaVenta').innerHTML = '';
+                return;
+            }
+
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `accion=buscar_producto&nombre=${encodeURIComponent(nombre)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarResultadosBusqueda(data.data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Mostrar resultados de búsqueda
+        function mostrarResultadosBusqueda(productos) {
+            const div = document.getElementById('resultadosBusquedaVenta');
+            
+            if (productos.length === 0) {
+                div.innerHTML = '<p style="color: #999;">No se encontraron productos</p>';
+                return;
+            }
+
+            let html = '<div style="border: 1px solid #ddd; border-radius: 6px; padding: 10px; max-height: 300px; overflow-y: auto;">';
+            html += '<table style="width: 100%; font-size: 14px;">';
+            html += '<thead><tr><th>Producto</th><th>Precio</th><th>Stock</th><th>Acción</th></tr></thead><tbody>';
+
+            productos.forEach(prod => {
+                const stock = parseInt(prod.cantidad_existente || 0);
+                const puedeAgregar = stock > 0;
+                html += `
+                    <tr>
+                        <td>${prod.nombre_producto}</td>
+                        <td>$${parseFloat(prod.precio_producto || 0).toFixed(2)}</td>
+                        <td>${stock}</td>
+                        <td>
+                            ${puedeAgregar ? 
+                                `<button type="button" class="btn btn-primary btn-small" onclick="agregarProductoAVenta(${prod.id_producto}, '${prod.nombre_producto.replace(/'/g, "\\'")}', ${prod.precio_producto}, ${stock})">Agregar</button>` :
+                                '<span class="sin-stock">Sin stock</span>'
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            div.innerHTML = html;
+        }
+
+        // Agregar producto a la lista de venta
+        function agregarProductoAVenta(idProducto, nombre, precio, stock) {
+            // Verificar si ya está en la lista
+            const existe = productosVentaLista.find(p => p.id_producto === idProducto);
+            if (existe) {
+                alert('Este producto ya está en la lista. Puede modificar la cantidad desde la lista.');
+                return;
+            }
+
+            productosVentaLista.push({
+                id_producto: idProducto,
+                nombre: nombre,
+                precio: parseFloat(precio),
+                cantidad: 1,
+                stock: parseInt(stock)
+            });
+
+            actualizarListaProductosVenta();
+            document.getElementById('buscarProductoVenta').value = '';
+            document.getElementById('resultadosBusquedaVenta').innerHTML = '';
+        }
+
+        // Actualizar lista de productos en la venta
+        function actualizarListaProductosVenta() {
+            const div = document.getElementById('productosVenta');
+            const totalSpan = document.getElementById('totalVenta');
+            const btnRegistrar = document.getElementById('btnRegistrarVenta');
+
+            if (productosVentaLista.length === 0) {
+                div.innerHTML = '<p style="color: #999;">No hay productos agregados</p>';
+                totalSpan.textContent = '0.00';
+                btnRegistrar.disabled = true;
+                return;
+            }
+
+            let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+            html += '<thead><tr><th>Producto</th><th>Precio</th><th>Cantidad</th><th>Subtotal</th><th>Acción</th></tr></thead><tbody>';
+
+            let total = 0;
+
+            productosVentaLista.forEach((prod, index) => {
+                const subtotal = prod.precio * prod.cantidad;
+                total += subtotal;
+
+                html += `
+                    <tr>
+                        <td>${prod.nombre}</td>
+                        <td>$${prod.precio.toFixed(2)}</td>
+                        <td>
+                            <input type="number" 
+                                   value="${prod.cantidad}" 
+                                   min="1" 
+                                   max="${prod.stock}"
+                                   class="cantidad-input"
+                                   onchange="actualizarCantidadVenta(${index}, this.value)">
+                            <small class="stock-info">(Stock: ${prod.stock})</small>
+                        </td>
+                        <td>$${subtotal.toFixed(2)}</td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-small" onclick="eliminarProductoVenta(${index})">Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            div.innerHTML = html;
+            totalSpan.textContent = total.toFixed(2);
+            btnRegistrar.disabled = false;
+        }
+
+        // Actualizar cantidad de un producto
+        function actualizarCantidadVenta(index, cantidad) {
+            cantidad = parseInt(cantidad);
+            const prod = productosVentaLista[index];
+            
+            if (cantidad < 1) {
+                cantidad = 1;
+            }
+            if (cantidad > prod.stock) {
+                cantidad = prod.stock;
+                alert(`La cantidad no puede ser mayor al stock disponible (${prod.stock})`);
+            }
+
+            prod.cantidad = cantidad;
+            actualizarListaProductosVenta();
+        }
+
+        // Eliminar producto de la lista
+        function eliminarProductoVenta(index) {
+            productosVentaLista.splice(index, 1);
+            actualizarListaProductosVenta();
+        }
+
+        // Formulario agregar venta
+        document.getElementById('formAgregarVenta').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const idCliente = document.getElementById('clienteVenta').value;
+
+            if (!idCliente) {
+                mostrarAlerta('alert-agregar-venta', 'Debe seleccionar un cliente', 'error');
+                return;
+            }
+
+            if (productosVentaLista.length === 0) {
+                mostrarAlerta('alert-agregar-venta', 'Debe agregar al menos un producto', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('accion', 'registrar_venta_completa');
+            formData.append('id_cliente', idCliente);
+            formData.append('productos', JSON.stringify(productosVentaLista.map(p => ({
+                id_producto: p.id_producto,
+                cantidad: p.cantidad
+            }))));
+
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('alert-agregar-venta', `Venta registrada correctamente. Total: $${data.total.toFixed(2)}`, 'success');
+                    
+                    // Reset form
+                    document.getElementById('formAgregarVenta').reset();
+                    productosVentaLista = [];
+                    actualizarListaProductosVenta();
+                    document.getElementById('resultadosBusquedaVenta').innerHTML = '';
+
+                    // Cambiar a sección ventas y recargar tabla
+                    setTimeout(() => {
+                        document.querySelector('[data-section="ventas"]').click();
+                    }, 1500);
+                } else {
+                    mostrarAlerta('alert-agregar-venta', data.message || 'Error al registrar venta', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('alert-agregar-venta', 'Error al registrar venta', 'error');
+            });
+        });
+
         // Formulario agregar compra
 document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -698,6 +977,14 @@ document.getElementById('formAgregarCompra').addEventListener('submit', function
                 alertDiv.innerHTML = '';
             }, 3000);
         }
+
+        // Buscar producto con Enter
+        document.getElementById('buscarProductoVenta').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                buscarProductoParaVenta();
+            }
+        });
 
         // Cargar inventario al iniciar
         cargarInventario();

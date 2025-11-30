@@ -300,5 +300,96 @@ class EmpleadoModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Obtener lista de clientes
+    public function obtenerClientes() {
+        $sql = "SELECT id_cliente, nombre_cliente, email_cliente, telefono_cliente 
+                FROM cliente 
+                ORDER BY nombre_cliente ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Registrar venta con múltiples productos
+    public function registrarVentaCompleta($idEmpleado, $idCliente, $productos) {
+        try {
+            $this->db->beginTransaction();
+
+            // Validar stock y calcular total
+            $total = 0;
+            $detalles = [];
+
+            foreach ($productos as $producto) {
+                $idProducto = $producto['id_producto'];
+                $cantidad = (int)$producto['cantidad'];
+
+                // Obtener información del producto
+                $stmt = $this->db->prepare("SELECT precio_producto, cantidad_existente, nombre_producto 
+                                            FROM producto 
+                                            WHERE id_producto = ?");
+                $stmt->execute([$idProducto]);
+                $prod = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$prod) {
+                    throw new Exception("Producto con ID $idProducto no encontrado");
+                }
+
+                if ($prod['cantidad_existente'] < $cantidad) {
+                    throw new Exception("No hay suficiente stock para {$prod['nombre_producto']}. Stock disponible: {$prod['cantidad_existente']}");
+                }
+
+                $precio = $prod['precio_producto'];
+                $subtotal = $precio * $cantidad;
+                $total += $subtotal;
+
+                $detalles[] = [
+                    'id_producto' => $idProducto,
+                    'cantidad' => $cantidad,
+                    'precio' => $precio,
+                    'stock_actual' => $prod['cantidad_existente']
+                ];
+            }
+
+            if ($total <= 0) {
+                throw new Exception("El total de la venta debe ser mayor a 0");
+            }
+
+            // Insertar venta
+            $stmt = $this->db->prepare("INSERT INTO venta 
+                (fecha_venta, id_empleado, id_cliente, total_venta)
+                VALUES (CURDATE(), ?, ?, ?)");
+            $stmt->execute([$idEmpleado, $idCliente, $total]);
+            $idVenta = $this->db->lastInsertId();
+
+            // Insertar detalles y actualizar stock
+            foreach ($detalles as $detalle) {
+                // Insertar detalle de venta
+                $stmt = $this->db->prepare("INSERT INTO detalles_venta 
+                    (id_venta, id_producto, cantidad, precio_venta_producto)
+                    VALUES (?, ?, ?, ?)");
+                $stmt->execute([
+                    $idVenta,
+                    $detalle['id_producto'],
+                    $detalle['cantidad'],
+                    $detalle['precio']
+                ]);
+
+                // Actualizar stock
+                $nuevoStock = $detalle['stock_actual'] - $detalle['cantidad'];
+                $stmt = $this->db->prepare("UPDATE producto 
+                                            SET cantidad_existente = ? 
+                                            WHERE id_producto = ?");
+                $stmt->execute([$nuevoStock, $detalle['id_producto']]);
+            }
+
+            $this->db->commit();
+            return ['success' => true, 'id_venta' => $idVenta, 'total' => $total];
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
 }
 ?>       
