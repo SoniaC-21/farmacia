@@ -208,6 +208,15 @@ class EmpleadoModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}
 
+    public function agregarCompra($fecha_compra, $id_proveedor, $total_compra) {
+        $sql = "INSERT INTO compra_producto (fecha_compra, id_proveedor, total_compra) 
+                VALUES (:fecha_compra, :id_proveedor, :total_compra)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':fecha_compra', $fecha_compra);
+        $stmt->bindParam(':id_proveedor', $id_proveedor);
+        $stmt->bindParam(':total_compra', $total_compra);
+        return $stmt->execute();
+    }
+}
 ?>       
