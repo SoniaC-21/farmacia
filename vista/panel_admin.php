@@ -41,9 +41,15 @@
             <input type="date" name="fecha_contratacion" required>
 
             <button type="submit" name="registrar_empleado">Registrar Empleado</button>
+            
         </form>
 
+         <div class="enlace">
+            <a href="../vista/admin.php">Volver a inicio</a>
+        </div>
     </div>
+
+   
 
     <!-- ====== LISTADO DE EMPLEADOS ====== -->
     <div class="contenedor lista-empleados">
