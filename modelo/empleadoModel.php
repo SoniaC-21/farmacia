@@ -137,13 +137,35 @@ class EmpleadoModel {
         }
     }
 
-
-    // Eliminar producto
+    // Eliminar producto respetando restricciones de clave foránea
     public function eliminarProducto($id) {
-        $sql = "DELETE FROM producto WHERE id_producto = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
+        try {
+            $sql = "DELETE FROM producto WHERE id_producto = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Si no lanzó excepción, se eliminó bien
+            return [
+                'ok'      => true,
+                'message' => 'Producto eliminado correctamente'
+            ];
+
+        } catch (PDOException $e) {
+            // 23000 = violación de integridad (claves foráneas, unique, etc.)
+            if ($e->getCode() === '23000') {
+                return [
+                    'ok'      => false,
+                    'message' => 'No se puede eliminar el producto porque está asociado a compras o ventas registradas.'
+                ];
+            }
+
+            // Otro error de BD
+            return [
+                'ok'      => false,
+                'message' => 'Error en la base de datos al eliminar el producto.'
+            ];
+        }
     }
 
     // Actualizar cantidad existente de producto
@@ -448,11 +470,27 @@ class EmpleadoModel {
     }
 
     public function eliminarProveedor($id) {
-        $sql = "DELETE FROM proveedor WHERE id_proveedor = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        return $stmt->execute();
+        try {
+            $sql = "DELETE FROM proveedor WHERE id_proveedor = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return [ 'ok' => true ];
+        } catch (PDOException $e) {
+            // 23000 = violación de llave foránea / integridad
+            if ($e->getCode() === '23000') {
+                return [
+                    'ok' => false,
+                    'message' => 'No se puede eliminar el proveedor porque tiene productos o compras asociadas.'
+                ];
+            }
+            return [
+                'ok' => false,
+                'message' => 'Error en BD: '.$e->getMessage()
+            ];
+        }
     }
+
 }
 
 
