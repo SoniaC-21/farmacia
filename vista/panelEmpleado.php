@@ -17,6 +17,8 @@
             <li><a href="#" class="menu-item" data-section="agregar">➕ Agregar Producto</a></li>
             <li><a href="#" class="menu-item" data-section="agregarCompra">🧾 Agregar Compra</a></li>
             <li><a href="#" class="menu-item" data-section="agregarVenta">💵 Agregar Venta</a></li>
+            <li><a href="#" class="menu-item" data-section="registroProveedor">📇 Registro Proveedores</a></li>
+            <li><a href="#" class="menu-item" data-section="proveedores">🏭 Proveedores</a></li>
             <li><a href="../">Cerrar sesión</a></li>
         </ul>
     </div>
@@ -34,30 +36,30 @@
                 <input type="text" id="buscarProducto" placeholder="Buscar producto por nombre...">
             </div>
             <div id="alert-inventario"></div>
-                <div class="table-responsive">
-                    <table id="tablaInventario">
+            <div class="table-responsive">
+                <table id="tablaInventario">
 
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Presentación</th>
-                                <th>Precio</th>
-                                <th>Cantidad</th>
-                                <th>Fecha Caducidad</th>
-                                <th>Requiere Receta</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbodyInventario">
-                            <tr>
-                                <td colspan="8" style="text-align: center;">Cargando productos...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Presentación</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Fecha Caducidad</th>
+                            <th>Requiere Receta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyInventario">
+                        <tr>
+                            <td colspan="8" style="text-align: center;">Cargando productos...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
+        </div>
 
         <!-- Sección: Compras -->
         <div id="compras" class="section">
@@ -214,9 +216,78 @@
             </form>
         </div>
 
+        <!-- Sección: Registro de Proveedor -->
+        <div id="registroProveedor" class="section">
+            <h2>Registrar Proveedor</h2>
+            <div id="alert-registro-proveedor"></div>
+
+            <form id="formAgregarProveedor">
+                <input type="hidden" id="idProveedorEditar"> <!-- para saber si estamos editando --> 
+
+                <div class="form-group">
+                    <label>Nombre del Proveedor *</label>
+                    <input type="text" id="nombreProveedor" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="telefonoProveedor" placeholder="Ej: 4431234567">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="emailProveedor" placeholder="correo@ejemplo.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Dirección de venta</label>
+                    <input type="text" id="direccionProveedor" placeholder="Calle, número, colonia, ciudad">
+                </div>
+
+                <button type="submit" id="btnGuardarProveedor" class="btn btn-primary"> Registrar Proveedor</button>
+
+                <button type="button" id="btnCancelarEdicionProveedor"
+                        class="btn btn-danger"
+                        style="display:none; margin-left:10px;">
+                    Cancelar edición
+                </button>
+            </form>
+        </div>
+
+        <!-- Sección: Listado de Proveedores -->
+        <div id="proveedores" class="section">
+            <h2>Proveedores</h2>
+
+            <div class="search-box">
+                <input type="text" id="buscarProveedor" placeholder="Buscar proveedor por nombre...">
+            </div>
+
+            <div id="alert-proveedores"></div>
+
+            <div class="table-responsive">
+                <table id="tablaProveedores">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Teléfono</th>
+                            <th>Email</th>
+                            <th>Dirección de venta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyProveedores">
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Cargando proveedores...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <!-- Modal para Detalles de Compra/Venta -->
+    <!-- Modal para Detalles de Compra -->
     <div id="modalDetalle" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -251,6 +322,8 @@
                 } 
                 else if (section === 'ventas') {
                     cargarVentas();
+                } else if (section === 'proveedores'){
+                    cargarProveedores();
                 }
                 else if (section === 'agregarVenta') {
                     cargarClientes();
@@ -905,41 +978,41 @@
         });
 
         // Formulario agregar compra
-document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
-    e.preventDefault();
+        document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
+            e.preventDefault();
 
-    const fecha = document.getElementById('fechaCompra').value;
-    const proveedor = document.getElementById('idProveedorCompra').value;
-    const total = document.getElementById('totalCompra').value;
+            const fecha = document.getElementById('fechaCompra').value;
+            const proveedor = document.getElementById('idProveedorCompra').value;
+            const total = document.getElementById('totalCompra').value;
 
-    const body = `accion=agregar_compra&fecha_compra=${fecha}&id_proveedor=${proveedor}&total_compra=${total}`;
+            const body = `accion=agregar_compra&fecha_compra=${fecha}&id_proveedor=${proveedor}&total_compra=${total}`;
 
-    fetch('../controlador/panelEmpleadoControler.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            mostrarAlerta('alert-agregar-compra', 'Compra registrada correctamente', 'success');
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('alert-agregar-compra', 'Compra registrada correctamente', 'success');
 
-            // Reset form
-            document.getElementById('formAgregarCompra').reset();
+                    // Reset form
+                    document.getElementById('formAgregarCompra').reset();
 
-            // Cambiar a sección compras y recargar tabla
-            setTimeout(() => {
-                document.querySelector('[data-section="compras"]').click();
-            }, 1000);
-        } else {
-            mostrarAlerta('alert-agregar-compra', data.message || 'Error al registrar compra', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        mostrarAlerta('alert-agregar-compra', 'Error al registrar compra', 'error');
-    });
-});
+                    // Cambiar a sección compras y recargar tabla
+                    setTimeout(() => {
+                        document.querySelector('[data-section="compras"]').click();
+                    }, 1000);
+                } else {
+                    mostrarAlerta('alert-agregar-compra', data.message || 'Error al registrar compra', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('alert-agregar-compra', 'Error al registrar compra', 'error');
+            });
+        });
 
 
         // Buscar producto
@@ -968,6 +1041,212 @@ document.getElementById('formAgregarCompra').addEventListener('submit', function
                 console.error('Error:', error);
             });
         });
+
+        // Cargar proveedores
+        function cargarProveedores() {
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'accion=obtener_proveedores'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarProveedores(data.data);
+                } else {
+                    mostrarAlerta('alert-proveedores', data.message || 'Error al cargar proveedores', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('alert-proveedores', 'Error al cargar proveedores', 'error');
+            });
+        }
+
+        // Mostrar proveedores en tabla
+        function mostrarProveedores(proveedores) {
+            const tbody = document.getElementById('tbodyProveedores');
+
+            if (!proveedores || proveedores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay proveedores registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = proveedores.map(p => `
+                <tr>
+                    <td>${p.id_proveedor}</td>
+                    <td>${p.nombre_proveedor}</td>
+                    <td>${p.telefono_proveedor || '-'}</td>
+                    <td>${p.email_proveedor || '-'}</td>
+                    <td>${p.direccion_de_venta || '-'}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-success btn-small"
+                                onclick="editarProveedor(${p.id_proveedor})">
+                            Editar
+                        </button>
+                        <button class="btn btn-danger btn-small"
+                                onclick="eliminarProveedor(${p.id_proveedor})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Formulario para agregar proveedor
+        document.getElementById('formAgregarProveedor').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const idEditar  = document.getElementById('idProveedorEditar').value;
+            const nombre    = document.getElementById('nombreProveedor').value.trim();
+            const telefono  = document.getElementById('telefonoProveedor').value.trim();
+            const email     = document.getElementById('emailProveedor').value.trim();
+            const direccion = document.getElementById('direccionProveedor').value.trim();
+
+            if (!nombre) {
+                mostrarAlerta('alert-registro-proveedor', 'El nombre del proveedor es obligatorio', 'error');
+                return;
+            }
+
+            const accion = idEditar ? 'actualizar_proveedor' : 'agregar_proveedor';
+
+            let body =
+                `accion=${accion}` +
+                `&nombre=${encodeURIComponent(nombre)}` +
+                `&telefono=${encodeURIComponent(telefono)}` +
+                `&email=${encodeURIComponent(email)}` +
+                `&direccion=${encodeURIComponent(direccion)}`;
+
+            if (idEditar) {
+                body += `&id_proveedor=${encodeURIComponent(idEditar)}`;
+            }
+
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta(
+                        'alert-registro-proveedor',
+                        idEditar ? 'Proveedor actualizado correctamente' : 'Proveedor registrado correctamente',
+                        'success'
+                    );
+
+                    // limpiar estado
+                    resetFormularioProveedor();
+
+                    // Ir a la sección de proveedores y recargar tabla
+                    setTimeout(() => {
+                        document.querySelector('[data-section="proveedores"]').click();
+                        cargarProveedores();
+                    }, 800);
+                } else {
+                    mostrarAlerta('alert-registro-proveedor', data.message || 'Error al guardar proveedor', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('alert-registro-proveedor', 'Error al guardar proveedor', 'error');
+            });
+        });
+
+        function resetFormularioProveedor() {
+            document.getElementById('formAgregarProveedor').reset();
+            document.getElementById('idProveedorEditar').value = '';
+            document.getElementById('btnGuardarProveedor').textContent = 'Registrar Proveedor';
+            document.getElementById('btnCancelarEdicionProveedor').style.display = 'none';
+        }
+
+        //boton para cancelar la edicion
+        document.getElementById('btnCancelarEdicionProveedor').addEventListener('click', function() {
+            resetFormularioProveedor();
+        });
+
+        // Buscar proveedor por nombre
+        document.getElementById('buscarProveedor').addEventListener('input', function() {
+            const nombre = this.value.trim();
+
+            if (nombre.length === 0) {
+                cargarProveedores();
+                return;
+            }
+
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `accion=buscar_proveedor&nombre=${encodeURIComponent(nombre)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarProveedores(data.data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+        //Editar los datos del proveedor
+        function editarProveedor(id) {
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `accion=obtener_proveedor&id_proveedor=${id}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const p = data.data;
+
+                    document.getElementById('idProveedorEditar').value = p.id_proveedor;
+                    document.getElementById('nombreProveedor').value  = p.nombre_proveedor;
+                    document.getElementById('telefonoProveedor').value = p.telefono_proveedor || '';
+                    document.getElementById('emailProveedor').value    = p.email_proveedor || '';
+                    document.getElementById('direccionProveedor').value = p.direccion_de_venta || '';
+
+                    document.getElementById('btnGuardarProveedor').textContent = 'Actualizar Proveedor';
+                    document.getElementById('btnCancelarEdicionProveedor').style.display = 'inline-block';
+
+                    // Cambiar a sección Registro Proveedores
+                    document.querySelector('[data-section="registroProveedor"]').click();
+                } else {
+                    alert('No se pudo cargar la información del proveedor');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al cargar proveedor');
+            });
+        }
+
+        function eliminarProveedor(id) {
+            if (!confirm('¿Seguro que deseas eliminar este proveedor?')) {
+                return;
+            }
+
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `accion=eliminar_proveedor&id_proveedor=${id}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('alert-proveedores', 'Proveedor eliminado correctamente', 'success');
+                    cargarProveedores();
+                } else {
+                    mostrarAlerta('alert-proveedores', data.message || 'Error al eliminar proveedor', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('alert-proveedores', 'Error al eliminar proveedor', 'error');
+            });
+        }
+
 
         // Mostrar alerta
         function mostrarAlerta(id, mensaje, tipo) {
