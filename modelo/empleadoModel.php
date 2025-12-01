@@ -79,8 +79,6 @@ class EmpleadoModel {
         return $stmt->execute();
     }
 
-
-
     public function agregarProductoConCompra($data) {
         try {
             // -------------- INICIAR TRANSACCIÓN --------------------
@@ -216,6 +214,71 @@ class EmpleadoModel {
         $stmt->bindParam(':fecha_compra', $fecha_compra);
         $stmt->bindParam(':id_proveedor', $id_proveedor);
         $stmt->bindParam(':total_compra', $total_compra);
+        return $stmt->execute();
+    }
+
+    // Insertar nuevo proveedor
+    public function agregarProveedor($nombre, $telefono, $email, $direccion) {
+        $sql = "INSERT INTO proveedor 
+                (nombre_proveedor, telefono_proveedor, email_proveedor, direccion_de_venta)
+                VALUES (:nombre, :telefono, :email, :direccion)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':nombre', $nombre);
+        $stmt->bindParam(':telefono', $telefono);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':direccion', $direccion);
+        return $stmt->execute();
+    }
+
+    // Obtener todos los proveedores
+    public function obtenerProveedores() {
+        $sql = "SELECT * FROM proveedor ORDER BY nombre_proveedor ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Buscar proveedores por nombre
+    public function buscarProveedor($nombre) {
+        $sql = "SELECT * 
+                FROM proveedor 
+                WHERE nombre_proveedor LIKE :nombre
+                ORDER BY nombre_proveedor ASC";
+        $stmt = $this->db->prepare($sql);
+        $nombre = "%$nombre%";
+        $stmt->bindParam(':nombre', $nombre);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerProveedorPorId($id) {
+        $sql = "SELECT * FROM proveedor WHERE id_proveedor = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function actualizarProveedor($id, $nombre, $telefono, $email, $direccion) {
+        $sql = "UPDATE proveedor
+                SET nombre_proveedor = :nombre,
+                    telefono_proveedor = :telefono,
+                    email_proveedor = :email,
+                    direccion_de_venta = :direccion
+                WHERE id_proveedor = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':nombre', $nombre);
+        $stmt->bindParam(':telefono', $telefono);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':direccion', $direccion);
+        return $stmt->execute();
+    }
+
+    public function eliminarProveedor($id) {
+        $sql = "DELETE FROM proveedor WHERE id_proveedor = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
 }

@@ -214,7 +214,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     ]);
                     exit();
                 
-            
+        case 'obtener_proveedores':
+            $proveedores = $model->obtenerProveedores();
+            echo json_encode(['success' => true, 'data' => $proveedores]);
+            exit();
+
+        case 'buscar_proveedor':
+            $nombre = $_POST['nombre'] ?? '';
+            $proveedores = $model->buscarProveedor($nombre);
+            echo json_encode(['success' => true, 'data' => $proveedores]);
+            exit();
+
+        case 'agregar_proveedor':
+            $nombre    = $_POST['nombre']    ?? '';
+            $telefono  = $_POST['telefono']  ?? '';
+            $email     = $_POST['email']     ?? '';
+            $direccion = $_POST['direccion'] ?? '';
+
+            if (empty($nombre)) {
+                echo json_encode(['success' => false, 'message' => 'El nombre del proveedor es obligatorio']);
+                exit();
+            }
+
+            $resultado = $model->agregarProveedor($nombre, $telefono, $email, $direccion);
+
+            echo json_encode([
+                'success' => $resultado,
+                'message' => $resultado ? 'Proveedor agregado correctamente' : 'Error al agregar proveedor'
+            ]);
+            exit();
+        
+        case 'obtener_proveedor':
+            $id = intval($_POST['id_proveedor'] ?? 0);
+            if ($id <= 0) {
+                echo json_encode(['success' => false, 'message' => 'ID inválido']);
+                exit();
+            }
+            $proveedor = $model->obtenerProveedorPorId($id);
+            echo json_encode(['success' => $proveedor ? true : false, 'data' => $proveedor]);
+            exit();
+
+        case 'actualizar_proveedor':
+            $id        = intval($_POST['id_proveedor'] ?? 0);
+            $nombre    = $_POST['nombre']    ?? '';
+            $telefono  = $_POST['telefono']  ?? '';
+            $email     = $_POST['email']     ?? '';
+            $direccion = $_POST['direccion'] ?? '';
+
+            if ($id <= 0 || empty($nombre)) {
+                echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
+                exit();
+            }
+
+            $resultado = $model->actualizarProveedor($id, $nombre, $telefono, $email, $direccion);
+            echo json_encode(['success' => $resultado]);
+            exit();
+
+        case 'eliminar_proveedor':
+            $id = intval($_POST['id_proveedor'] ?? 0);
+            if ($id <= 0) {
+                echo json_encode(['success' => false, 'message' => 'ID inválido']);
+                exit();
+            }
+            $resultado = $model->eliminarProveedor($id);
+            echo json_encode(['success' => $resultado]);
+            exit();
+                    
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);
             exit();
