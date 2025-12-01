@@ -47,10 +47,6 @@
             <br><a href="../vista/admin.php">Salir</a>
         </div>
 
-
-         <div class="enlace">
-            <a href="../vista/admin.php">Volver a inicio</a>
-        </div>
     </div>
 
    

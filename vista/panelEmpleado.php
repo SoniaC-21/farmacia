@@ -215,7 +215,7 @@
                 <button type="submit" class="btn btn-primary" id="btnRegistrarVenta" disabled>Registrar Venta</button>
             </form>
         </div>
-
+        
         <!-- Sección: Registro de Proveedor -->
         <div id="registroProveedor" class="section">
             <h2>Registrar Proveedor</h2>
