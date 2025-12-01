@@ -454,4 +454,6 @@ class EmpleadoModel {
         return $stmt->execute();
     }
 }
+
+
 ?>       
