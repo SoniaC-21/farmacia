@@ -85,11 +85,16 @@ body {
 
 .header {
     margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: block;
 }
 
 .header h1 {
     color: #1d6df7;
     margin-bottom: 10px;
+    display: block;
 }
 
 /* Secciones */
@@ -99,6 +104,8 @@ body {
     padding: 25px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 0;
 }
 
 .section.active {
@@ -303,4 +310,260 @@ tr:hover {
 #tablaInventario,
 #tablaCompras {
     min-width: 900px;
+}
+
+/* Estilos para tabla de detalles en modal */
+.tabla-detalle {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.tabla-detalle th {
+    background: #1d6df7;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.tabla-detalle td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabla-detalle tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.tabla-detalle tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Botón ver detalles */
+.btn-detalle {
+    padding: 6px 12px;
+    background: #1d6df7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.btn-detalle:hover {
+    background: #004be0;
+}
+
+/* Estilos para sección agregar venta */
+#agregarVenta {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    margin-top: 0;
+}
+
+#agregarVenta * {
+    box-sizing: border-box;
+}
+
+#agregarVenta h3 {
+    color: #1d6df7;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 18px;
+    border-bottom: 2px solid #1d6df7;
+    padding-bottom: 8px;
+}
+
+#resultadosBusquedaVenta {
+    margin-bottom: 20px;
+}
+
+#resultadosBusquedaVenta > div {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+    background: white;
+    width: 100%;
+}
+
+#resultadosBusquedaVenta table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    table-layout: auto;
+}
+
+#resultadosBusquedaVenta th {
+    background: #1d6df7;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+    position: sticky;
+    top: 0;
+}
+
+#resultadosBusquedaVenta td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+#resultadosBusquedaVenta tr:hover {
+    background: #f9f9f9;
+}
+
+#productosVenta {
+    margin-bottom: 20px;
+    min-height: 50px;
+    width: 100%;
+    overflow-x: auto;
+}
+
+#productosVenta > p {
+    padding: 15px;
+    text-align: center;
+    background: #f9f9f9;
+    border-radius: 6px;
+    margin: 0;
+}
+
+#productosVenta table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    table-layout: auto;
+}
+
+#productosVenta th {
+    background: #1d6df7;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#productosVenta td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+#productosVenta tr:last-child td {
+    border-bottom: none;
+}
+
+#productosVenta tr:hover {
+    background: #f9f9f9;
+}
+
+#productosVenta input[type="number"],
+.cantidad-input {
+    width: 80px;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#productosVenta input[type="number"]:focus,
+.cantidad-input:focus {
+    border-color: #1d6df7;
+    outline: none;
+}
+
+#productosVenta small,
+.stock-info {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #666;
+}
+
+#totalVenta {
+    color: #000000;
+    font-size: 24px;
+}
+
+#agregarVenta .total-box {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: none;
+    text-align: center;
+}
+
+#agregarVenta .total-box strong {
+    font-size: 20px;
+    color: #000000;
+}
+
+#clienteVenta {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+#clienteVenta:focus {
+    border-color: #1d6df7;
+    outline: none;
+}
+
+#buscarProductoVenta {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+#buscarProductoVenta:focus {
+    border-color: #1d6df7;
+    outline: none;
+}
+
+#agregarVenta .search-container {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+#agregarVenta .search-container input {
+    flex: 1;
+}
+
+#agregarVenta .search-container button {
+    white-space: nowrap;
+}
+
+.sin-stock {
+    color: #999;
+    font-style: italic;
+    font-size: 14px;
+}
+
+#resultadosBusquedaVenta > p {
+    padding: 15px;
+    text-align: center;
+    color: #999;
+    background: #f9f9f9;
+    border-radius: 6px;
+    margin: 0;
 }

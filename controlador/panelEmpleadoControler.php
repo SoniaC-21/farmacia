@@ -1,169 +1,285 @@
 <?php
 
-include "../modelo/empleadoModel.php";
+    include "../modelo/empleadoModel.php";
 
-session_start();
+    session_start();
 
-// Verificar si hay sesión de empleado
-if (!isset($_SESSION['empleado_id'])) {
-    header("Location: ../vista/inicio.php");
-    exit();
-}
+    // Verificar sesión
+    if (!isset($_SESSION['empleado_id'])) {
+        echo json_encode(["success" => false, "message" => "Sesión no iniciada"]);
+        exit();
+    }
 
-$model = new EmpleadoModel();
+    $model = new EmpleadoModel();
 
-// Manejar acciones AJAX
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
-    header('Content-Type: application/json');
-    
+    // Validar acción
+    if (!isset($_POST['accion'])) {
+        echo json_encode(["success" => false, "message" => "No se especificó acción"]);
+        exit();
+    }
+
     $accion = $_POST['accion'];
-    
+
     switch ($accion) {
+
+        /* ------------------------------
+        OBTENER INVENTARIO
+        ------------------------------*/
         case 'obtener_productos':
-            $producto = $model->obtenerProductos();
-            echo json_encode(['success' => true, 'data' => $producto]);
-            exit();
-            
-        case 'agregar_producto':
+            $productos = $model->obtenerProductos();
+            echo json_encode(["success" => true, "data" => $productos]);
+            break;
+
+
+        /* ------------------------------
+        BUSCAR PRODUCTO
+        ------------------------------*/
+        case 'buscar_producto':
             $nombre = $_POST['nombre'] ?? '';
-            $precio = $_POST['precio'] ?? 0;
-            $cantidad = $_POST['cantidad'] ?? 0;
-            $presentacion = $_POST['presentacion'] ?? '';
-            $fecha_caducidad = $_POST['fecha_caducidad'] ?? null;
-            $id_proveedor = $_POST['id_proveedor'] ?? null;
-            $necesita_receta = isset($_POST['necesita_receta']) ? 1 : 0;
-            
-            if (empty($nombre) || $precio <= 0) {
-                echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
-                exit();
-            }
-            
-            // Si fecha_caducidad está vacía, establecer como null
-            if (empty($fecha_caducidad)) {
-                $fecha_caducidad = null;
-            }
-            
-            // Si id_proveedor está vacío, establecer como null
-            if (empty($id_proveedor) || $id_proveedor <= 0) {
-                echo json_encode(['success' => false, 'message' => 'Debe seleccionar un proveedor válido']);
-                exit();
-            }
-            
-            
-            $resultado = $model->agregarProducto($nombre, $precio, $cantidad, $presentacion, $fecha_caducidad, $id_proveedor, $necesita_receta);
-            echo json_encode(['success' => $resultado, 'message' => $resultado ? 'Producto agregado correctamente' : 'Error al agregar producto']);
-            exit();
-            
+            $productos = $model->buscarProducto($nombre);
+            echo json_encode(["success" => true, "data" => $productos]);
+            break;
+
+
+        /* ------------------------------
+        ACTUALIZAR STOCK
+        ------------------------------*/
+        case 'actualizar_stock':
+            $id = $_POST['id'];
+            $stock = $_POST['stock'];
+
+            $ok = $model->actualizarStock($id, $stock);
+
+            echo json_encode([
+                "success" => $ok,
+                "message" => $ok ? "Stock actualizado" : "Error al actualizar stock"
+            ]);
+            break;
+
+
+        /* ------------------------------
+        ELIMINAR PRODUCTO
+        ------------------------------*/
         case 'eliminar_producto':
-            $id = $_POST['id'] ?? 0;
+            $id = intval($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ID de producto inválido'
+                ]);
+                break;
+            }
+
+            $resultado = $model->eliminarProducto($id);
+
+            echo json_encode([
+                'success' => $resultado['ok'],
+                'message' => $resultado['message'] ?? ''
+            ]);
+            break;
+
+
+
+        /* ------------------------------
+        AGREGAR PRODUCTO
+        ------------------------------*/
+        case 'agregar_producto':
+
+            $nombre = $_POST['nombre'];
+            $precio = $_POST['precio'];
+            $cantidad = $_POST['cantidad'];
+
+            $presentacion = $_POST['presentacion'] ?? null;
+            $fechaCaducidad = $_POST['fecha_caducidad'] ?? null;
+            $idProveedor = $_POST['id_proveedor'] ?? null;
+            $receta = isset($_POST['necesita_receta']) ? 1 : 0;
+
+            $ok = $model->agregarProducto(
+                $nombre,
+                $precio,
+                $cantidad,
+                $presentacion,
+                $fechaCaducidad,
+                $idProveedor,
+                $receta
+            );
+
+            echo json_encode([
+                "success" => $ok,
+                "message" => $ok ? "Producto agregado" : "Error al agregar producto"
+            ]);
+            break;
+
+
+        /* ------------------------------
+        OBTENER COMPRAS
+        ------------------------------*/
+        case 'obtener_compras':
+            $compras = $model->obtenerCompras();
+            echo json_encode(["success" => true, "data" => $compras]);
+            break;
+
+
+        /* ------------------------------
+        OBTENER DETALLE COMPRA
+        ------------------------------*/
+        case 'obtener_detalle_compra':
+            $id = $_POST['id_compra'];
+
+            $detalle = $model->obtenerDetalleCompra($id);
+            echo json_encode(["success" => true, "data" => $detalle]);
+            break;
+
+
+        /* ------------------------------
+        AGREGAR COMPRA
+        ------------------------------*/
+        case 'agregar_compra':
+            $fecha = $_POST['fecha_compra'];
+            $proveedor = $_POST['id_proveedor'];
+            $total = $_POST['total_compra'];
+
+            $ok = $model->agregarCompra($fecha, $proveedor, $total);
+
+            echo json_encode([
+                "success" => $ok,
+                "message" => $ok ? "Compra registrada" : "Error al registrar compra"
+            ]);
+            break;
+
+
+        /* ------------------------------
+        OBTENER VENTAS
+        ------------------------------*/
+        case 'obtener_ventas':
+            $ventas = $model->obtenerVentas();
+            echo json_encode(["success" => true, "data" => $ventas]);
+            break;
+
+        case 'obtener_detalle_venta':
+            $id = $_POST['id_venta'];
+            $detalle = $model->obtenerDetalleVenta($id);
+            echo json_encode(["success" => true, "data" => $detalle]);
+            break;
+
+        case 'obtener_clientes':
+            $clientes = $model->obtenerClientes();
+            echo json_encode(["success" => true, "data" => $clientes]);
+            break;
+
+        case 'registrar_venta_completa':
+            $idCliente = $_POST['id_cliente'] ?? 0;
+            $productos = json_decode($_POST['productos'], true) ?? [];
+
+            if ($idCliente <= 0) {
+                echo json_encode(["success" => false, "message" => "Debe seleccionar un cliente"]);
+                exit();
+            }
+
+            if (empty($productos)) {
+                echo json_encode(["success" => false, "message" => "Debe agregar al menos un producto"]);
+                exit();
+            }
+
+            $idEmpleado = $_SESSION['empleado_id'];
+            $resultado = $model->registrarVentaCompleta($idEmpleado, $idCliente, $productos);
+            echo json_encode($resultado);
+            break;
+
+        case 'registrar_compra_completa':
+            $idProveedor = $_POST['id_proveedor'] ?? 0;
+            $productos = json_decode($_POST['productos'], true) ?? [];
+
+            if ($idProveedor <= 0) {
+                echo json_encode(["success" => false, "message" => "Debe seleccionar un proveedor"]);
+                exit();
+            }
+
+            if (empty($productos)) {
+                echo json_encode(["success" => false, "message" => "Debe agregar al menos un producto"]);
+                exit();
+            }
+
+            $resultado = $model->registrarCompraCompleta($idProveedor, $productos);
+            echo json_encode($resultado);
+            break;
+
+        case 'obtener_proveedores':
+            $proveedores = $model->obtenerProveedores();
+            echo json_encode(['success' => true, 'data' => $proveedores]);
+            exit();
+
+        case 'buscar_proveedor':
+            $nombre = $_POST['nombre'] ?? '';
+            $proveedores = $model->buscarProveedor($nombre);
+            echo json_encode(['success' => true, 'data' => $proveedores]);
+            exit();
+
+        case 'agregar_proveedor':
+            $nombre    = $_POST['nombre']    ?? '';
+            $telefono  = $_POST['telefono']  ?? '';
+            $email     = $_POST['email']     ?? '';
+            $direccion = $_POST['direccion'] ?? '';
+
+            if (empty($nombre)) {
+                echo json_encode(['success' => false, 'message' => 'El nombre del proveedor es obligatorio']);
+                exit();
+            }
+
+            $resultado = $model->agregarProveedor($nombre, $telefono, $email, $direccion);
+
+            echo json_encode([
+                'success' => $resultado,
+                'message' => $resultado ? 'Proveedor agregado correctamente' : 'Error al agregar proveedor'
+            ]);
+            exit();
+        
+        case 'obtener_proveedor':
+            $id = intval($_POST['id_proveedor'] ?? 0);
             if ($id <= 0) {
                 echo json_encode(['success' => false, 'message' => 'ID inválido']);
                 exit();
             }
-            
-            $resultado = $model->eliminarProducto($id);
-            echo json_encode(['success' => $resultado, 'message' => $resultado ? 'Producto eliminado correctamente' : 'Error al eliminar producto']);
+            $proveedor = $model->obtenerProveedorPorId($id);
+            echo json_encode(['success' => $proveedor ? true : false, 'data' => $proveedor]);
             exit();
-            
-        case 'actualizar_stock':
-            $id = $_POST['id'] ?? 0;
-            $cantidad = $_POST['stock'] ?? 0;
-            
-            if ($id <= 0 || $cantidad < 0) {
+
+        case 'actualizar_proveedor':
+            $id        = intval($_POST['id_proveedor'] ?? 0);
+            $nombre    = $_POST['nombre']    ?? '';
+            $telefono  = $_POST['telefono']  ?? '';
+            $email     = $_POST['email']     ?? '';
+            $direccion = $_POST['direccion'] ?? '';
+
+            if ($id <= 0 || empty($nombre)) {
                 echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
                 exit();
             }
-            
-            $resultado = $model->actualizarStock($id, $cantidad);
-            echo json_encode(['success' => $resultado, 'message' => $resultado ? 'Cantidad actualizada correctamente' : 'Error al actualizar cantidad']);
+
+            $resultado = $model->actualizarProveedor($id, $nombre, $telefono, $email, $direccion);
+            echo json_encode(['success' => $resultado]);
             exit();
-            
-        case 'obtener_compras':
-            $compras = $model->obtenerCompras();
-            echo json_encode(['success' => true, 'data' => $compras]);
-            exit();
-            
-        case 'obtener_detalle_compra':
-            $id_compra = $_POST['id_compra'] ?? 0;
-            if ($id_compra <= 0) {
+
+        case 'eliminar_proveedor':
+            $id = intval($_POST['id_proveedor'] ?? 0);
+            if ($id <= 0) {
                 echo json_encode(['success' => false, 'message' => 'ID inválido']);
                 exit();
             }
-            
-            $detalles = $model->obtenerDetalleCompra($id_compra);
-            echo json_encode(['success' => true, 'data' => $detalles]);
-            exit();
-            
-        case 'buscar_producto':
-            $nombre = $_POST['nombre'] ?? '';
-            $producto = $model->buscarProducto($nombre);
-            echo json_encode(['success' => true, 'data' => $producto]);
+
+            $resultado = $model->eliminarProveedor($id);
+            echo json_encode([
+                'success' => $resultado['ok'],
+                'message' => $resultado['message'] ?? ''
+            ]);
             exit();
 
-        case 'registrar_compra':
-                $total = $_POST['total'] ?? 0;
-                $detalles = json_decode($_POST['detalles'], true);
-            
-                if ($total <= 0 || empty($detalles)) {
-                    echo json_encode(['success' => false, 'message' => 'Compra inválida']);
-                    exit();
-                }
-            
-                // Registrar encabezado de compra
-                $id_compra = $model->registrarCompra($total);
-            
-                foreach ($detalles as $det) {
-                    $model->insertarDetalleCompra(
-                        $id_compra,
-                        $det['id_producto'],
-                        $det['cantidad'],
-                        $det['precio']
-                    );
-            
-                    // Actualizar stock
-                    $model->actualizarStock($det['id_producto'], $det['nuevo_stock']);
-                }
-            
-                echo json_encode(['success' => true, 'message' => 'Compra registrada correctamente']);
-                exit();
-                
-                case 'agregar_compra':
-
-                    $fecha = $_POST['fecha_compra'] ?? '';
-                    $proveedor = $_POST['id_proveedor'] ?? 0;
-                    $total = $_POST['total_compra'] ?? 0;
-                
-                    // Validaciones
-                    if (empty($fecha)) {
-                        echo json_encode(['success' => false, 'message' => 'Debe ingresar la fecha de compra']);
-                        exit();
-                    }
-                
-                    if ($proveedor <= 0) {
-                        echo json_encode(['success' => false, 'message' => 'Debe seleccionar un proveedor válido']);
-                        exit();
-                    }
-                
-                    if ($total <= 0) {
-                        echo json_encode(['success' => false, 'message' => 'El total debe ser mayor a 0']);
-                        exit();
-                    }
-                
-                    // Llamar al modelo
-                    $resultado = $model->agregarCompra($fecha, $proveedor, $total);
-                
-                    echo json_encode([
-                        'success' => $resultado, 
-                        'message' => $resultado ? 'Compra registrada correctamente' : 'Error al registrar compra'
-                    ]);
-                    exit();
-                
-            
+                    
         default:
             echo json_encode(['success' => false, 'message' => 'Acción no válida']);
             exit();
     }
-}
-
 ?>
+
 

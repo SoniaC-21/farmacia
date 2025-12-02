@@ -21,7 +21,7 @@ if (isset($_POST['login'])) {
         exit();
     } else {
         echo "<h2>Usuario o contraseña incorrectos</h2>";
-        echo "<a href='../vista/home.php'>Intentar nuevamente</a>";
+        echo "<a href='../vista/empleados.php'>Intentar nuevamente</a>";
     }
 }
 
