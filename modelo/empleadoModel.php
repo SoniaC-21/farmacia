@@ -126,7 +126,7 @@ class EmpleadoModel {
                 ':cantidad' => $data['cantidad'],
                 ':precio'   => $data['precio']
             ]);
-
+            
             // -------------- CONFIRMAR --------------------
             $this->db->commit();
             return true;
@@ -137,13 +137,35 @@ class EmpleadoModel {
         }
     }
 
-
-    // Eliminar producto
+    // Eliminar producto respetando restricciones de clave foránea
     public function eliminarProducto($id) {
-        $sql = "DELETE FROM producto WHERE id_producto = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        return $stmt->execute();
+        try {
+            $sql = "DELETE FROM producto WHERE id_producto = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Si no lanzó excepción, se eliminó bien
+            return [
+                'ok'      => true,
+                'message' => 'Producto eliminado correctamente'
+            ];
+
+        } catch (PDOException $e) {
+            // 23000 = violación de integridad (claves foráneas, unique, etc.)
+            if ($e->getCode() === '23000') {
+                return [
+                    'ok'      => false,
+                    'message' => 'No se puede eliminar el producto porque está asociado a compras o ventas registradas.'
+                ];
+            }
+
+            // Otro error de BD
+            return [
+                'ok'      => false,
+                'message' => 'Error en la base de datos al eliminar el producto.'
+            ];
+        }
     }
 
     // Actualizar cantidad existente de producto
@@ -175,10 +197,14 @@ class EmpleadoModel {
         return $stmt->execute();
     }
     
-    // Obtener todas las compras
+    // Obtener todas las compras con información de productos
     public function obtenerCompras() {
-        $sql = "SELECT *
+        $sql = "SELECT c.*, 
+                GROUP_CONCAT(DISTINCT p.nombre_producto SEPARATOR ', ') as productos
                 FROM compra_producto c
+                LEFT JOIN detalles_compra dc ON c.id_compra = dc.id_compra
+                LEFT JOIN producto p ON dc.id_producto = p.id_producto
+                GROUP BY c.id_compra
                 ORDER BY c.fecha_compra DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
@@ -423,6 +449,106 @@ class EmpleadoModel {
         }
     }
 
+    // Registrar compra con múltiples productos (pueden ser productos nuevos)
+    public function registrarCompraCompleta($idProveedor, $productos) {
+        try {
+            $this->db->beginTransaction();
+
+            // Validar productos y calcular total
+            $total = 0;
+            $detalles = [];
+
+            foreach ($productos as $producto) {
+                $idProducto = $producto['id_producto'] ?? null;
+                $cantidad = (int)$producto['cantidad'];
+                $precio = (float)$producto['precio'];
+                $nombre = $producto['nombre'] ?? '';
+                $presentacion = $producto['presentacion'] ?? null;
+                $fechaCaducidad = $producto['fecha_caducidad'] ?? null;
+                $necesitaReceta = isset($producto['necesita_receta']) ? (int)$producto['necesita_receta'] : 0;
+
+                if (empty($nombre) || $precio <= 0 || $cantidad <= 0) {
+                    throw new Exception("Datos inválidos para el producto: $nombre");
+                }
+
+                // Si no tiene id_producto, crear nuevo producto
+                if (empty($idProducto)) {
+                    $idProducto = $this->agregarProducto(
+                        $nombre,
+                        $precio,
+                        $cantidad,
+                        $presentacion,
+                        $fechaCaducidad,
+                        $idProveedor,
+                        $necesitaReceta
+                    );
+
+                    if (!$idProducto) {
+                        throw new Exception("Error al crear el producto: $nombre");
+                    }
+                } else {
+                    // Si el producto ya existe, obtener información y actualizar stock
+                    $stmt = $this->db->prepare("SELECT precio_producto, cantidad_existente, nombre_producto 
+                                                FROM producto 
+                                                WHERE id_producto = ?");
+                    $stmt->execute([$idProducto]);
+                    $prod = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$prod) {
+                        throw new Exception("Producto con ID $idProducto no encontrado");
+                    }
+
+                    // Actualizar stock (sumar cantidad comprada)
+                    $nuevoStock = $prod['cantidad_existente'] + $cantidad;
+                    $stmt = $this->db->prepare("UPDATE producto 
+                                                SET cantidad_existente = ? 
+                                                WHERE id_producto = ?");
+                    $stmt->execute([$nuevoStock, $idProducto]);
+                }
+
+                $subtotal = $precio * $cantidad;
+                $total += $subtotal;
+
+                $detalles[] = [
+                    'id_producto' => $idProducto,
+                    'cantidad' => $cantidad,
+                    'precio' => $precio
+                ];
+            }
+
+            if ($total <= 0) {
+                throw new Exception("El total de la compra debe ser mayor a 0");
+            }
+
+            // Insertar compra
+            $stmt = $this->db->prepare("INSERT INTO compra_producto 
+                (fecha_compra, id_proveedor, total_compra)
+                VALUES (CURDATE(), ?, ?)");
+            $stmt->execute([$idProveedor, $total]);
+            $idCompra = $this->db->lastInsertId();
+
+            // Insertar detalles
+            foreach ($detalles as $detalle) {
+                $stmt = $this->db->prepare("INSERT INTO detalles_compra 
+                    (id_compra, id_producto, cantidad, precio_compra_producto)
+                    VALUES (?, ?, ?, ?)");
+                $stmt->execute([
+                    $idCompra,
+                    $detalle['id_producto'],
+                    $detalle['cantidad'],
+                    $detalle['precio']
+                ]);
+            }
+
+            $this->db->commit();
+            return ['success' => true, 'id_compra' => $idCompra, 'total' => $total];
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function obtenerProveedorPorId($id) {
         $sql = "SELECT * FROM proveedor WHERE id_proveedor = :id";
         $stmt = $this->db->prepare($sql);
@@ -448,11 +574,27 @@ class EmpleadoModel {
     }
 
     public function eliminarProveedor($id) {
-        $sql = "DELETE FROM proveedor WHERE id_proveedor = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-        return $stmt->execute();
+        try {
+            $sql = "DELETE FROM proveedor WHERE id_proveedor = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return [ 'ok' => true ];
+        } catch (PDOException $e) {
+            // 23000 = violación de llave foránea / integridad
+            if ($e->getCode() === '23000') {
+                return [
+                    'ok' => false,
+                    'message' => 'No se puede eliminar el proveedor porque tiene productos o compras asociadas.'
+                ];
+            }
+            return [
+                'ok' => false,
+                'message' => 'Error en BD: '.$e->getMessage()
+            ];
+        }
     }
+
 }
 
 

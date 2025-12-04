@@ -71,13 +71,14 @@
                         <th>ID Compra</th>
                         <th>Fecha</th>
                         <th>ID Proveedor</th>
+                        <th>Productos</th>
                         <th>Total</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyCompras">
                     <tr>
-                        <td colspan="5" style="text-align: center;">Cargando compras...</td>
+                        <td colspan="6" style="text-align: center;">Cargando compras...</td>
                     </tr>
                 </tbody>
             </table>
@@ -174,6 +175,42 @@
                 <div class="form-group">
                     <label>Total de Compra *</label>
                     <input type="number" id="totalCompra" step="0.01" min="0" required>
+                    <label>Proveedor *</label>
+                    <select id="proveedorCompra" required>
+                        <option value="">Seleccione un proveedor...</option>
+                    </select>
+                </div>
+
+                <h3>Datos del Producto</h3>
+                <div class="form-group">
+                    <label>Nombre del Producto *</label>
+                    <input type="text" id="nombreProductoCompra" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Presentación</label>
+                        <input type="text" id="presentacionProductoCompra" placeholder="Ej: Caja de 20, Frasco 100ml">
+                    </div>
+                    <div class="form-group">
+                        <label>Precio *</label>
+                        <input type="number" id="precioProductoCompra" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cantidad *</label>
+                        <input type="number" id="cantidadProductoCompra" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Caducidad</label>
+                        <input type="date" id="fechaCaducidadProductoCompra">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" id="necesitaRecetaProductoCompra" style="width: auto; margin-right: 10px;">
+                        Requiere Receta Médica
+                    </label>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Registrar Compra</button>
@@ -329,6 +366,9 @@
                     cargarClientes();
                     productosVentaLista = [];
                     actualizarListaProductosVenta();
+                }
+                else if (section === 'agregarCompra') {
+                    cargarProveedoresParaCompra();
                 }
 
             });
@@ -518,7 +558,7 @@
             const tbody = document.getElementById('tbodyCompras');
             
             if (compras.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay compras registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay compras registradas</td></tr>';
                 return;
             }
             
@@ -527,7 +567,7 @@
                     <td>${compra.id_compra}</td>
                     <td>${compra.fecha_compra || compra.fecha}</td>
                     <td>${compra.id_proveedor}</td>
-
+                    <td>${compra.productos || '-'}</td>
                     <td>$${parseFloat(compra.total_compra || 0).toFixed(2)}</td>
                     <td>
                         <button class="btn btn-primary btn-small" onclick="verDetalleCompra(${compra.id_compra})">Ver Detalles</button>
@@ -977,33 +1017,83 @@
             });
         });
 
-        // Formulario agregar compra
-        document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const fecha = document.getElementById('fechaCompra').value;
-            const proveedor = document.getElementById('idProveedorCompra').value;
-            const total = document.getElementById('totalCompra').value;
-
-            const body = `accion=agregar_compra&fecha_compra=${fecha}&id_proveedor=${proveedor}&total_compra=${total}`;
-
+        // Cargar proveedores para compra
+        function cargarProveedoresParaCompra() {
             fetch('../controlador/panelEmpleadoControler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: body
+                body: 'accion=obtener_proveedores'
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    mostrarAlerta('alert-agregar-compra', 'Compra registrada correctamente', 'success');
+                    const select = document.getElementById('proveedorCompra');
+                    select.innerHTML = '<option value="">Seleccione un proveedor...</option>';
+                    data.data.forEach(proveedor => {
+                        const option = document.createElement('option');
+                        option.value = proveedor.id_proveedor;
+                        option.textContent = `${proveedor.nombre_proveedor} (${proveedor.email_proveedor || 'Sin email'})`;
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
 
-                    // Reset form
+        // Formulario agregar compra
+        document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const idProveedor = document.getElementById('proveedorCompra').value;
+            const nombre = document.getElementById('nombreProductoCompra').value.trim();
+            const precio = parseFloat(document.getElementById('precioProductoCompra').value);
+            const cantidad = parseInt(document.getElementById('cantidadProductoCompra').value);
+            const presentacion = document.getElementById('presentacionProductoCompra').value.trim();
+            const fechaCaducidad = document.getElementById('fechaCaducidadProductoCompra').value;
+            const necesitaReceta = document.getElementById('necesitaRecetaProductoCompra').checked;
+
+            // Validaciones
+            if (!idProveedor) {
+                mostrarAlerta('alert-agregar-compra', 'Debe seleccionar un proveedor', 'error');
+                return;
+            }
+
+            if (!nombre || !precio || precio <= 0 || !cantidad || cantidad <= 0) {
+                mostrarAlerta('alert-agregar-compra', 'Por favor complete todos los campos obligatorios (Nombre, Precio y Cantidad)', 'error');
+                return;
+            }
+
+            // Preparar datos del producto
+            const producto = {
+                id_producto: null,
+                nombre: nombre,
+                precio: precio,
+                cantidad: cantidad,
+                presentacion: presentacion || '',
+                fecha_caducidad: fechaCaducidad || null,
+                necesita_receta: necesitaReceta ? 1 : 0
+            };
+
+            const formData = new FormData();
+            formData.append('accion', 'registrar_compra_completa');
+            formData.append('id_proveedor', idProveedor);
+            formData.append('productos', JSON.stringify([producto]));
+
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('alert-agregar-compra', 'Compra agregada exitosamente', 'success');
+                    
+                    // Limpiar formulario pero mantener en la misma página
                     document.getElementById('formAgregarCompra').reset();
-
-                    // Cambiar a sección compras y recargar tabla
-                    setTimeout(() => {
-                        document.querySelector('[data-section="compras"]').click();
-                    }, 1000);
+                    // Recargar proveedores para mantener el select actualizado
+                    cargarProveedoresParaCompra();
                 } else {
                     mostrarAlerta('alert-agregar-compra', data.message || 'Error al registrar compra', 'error');
                 }
@@ -1265,8 +1355,13 @@
             }
         });
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/brandon
         // Cargar inventario al iniciar
         cargarInventario();
     </script>
 </body>
 </html>
+
