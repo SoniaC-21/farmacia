@@ -20,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btnAgregarProducto'])
         'presentacion' => $_POST['presentacion'],
         'precio'       => $_POST['precio'],
         'cantidad'     => $_POST['cantidad'],
-        'caducidad'    => $_POST['fecha_caducidad'],
         'proveedor'    => $_POST['id_proveedor'],
         'receta'       => isset($_POST['requiere_receta']) ? 1 : 0
     ];
@@ -83,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $precio = $_POST['precio'] ?? 0;
             $cantidad = $_POST['cantidad'] ?? 0;
             $presentacion = $_POST['presentacion'] ?? '';
-            $fecha_caducidad = $_POST['fecha_caducidad'] ?? null;
             $id_proveedor = $_POST['id_proveedor'] ?? null;
             $necesita_receta = isset($_POST['necesita_receta']) ? 1 : 0;
 
@@ -105,7 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                     $precio,
                     $cantidad,
                     $presentacion,
-                    $fecha_caducidad,
                     $id_proveedor,
                     $necesita_receta
                 );

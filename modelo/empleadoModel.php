@@ -28,12 +28,12 @@ class EmpleadoModel {
     }
 
     // Agregar nuevo producto
-    public function agregarProducto($nombre, $precio, $cantidad, $presentacion, $fecha_caducidad, $id_proveedor, $necesita_receta) {
+    public function agregarProducto($nombre, $precio, $cantidad, $presentacion, $id_proveedor, $necesita_receta) {
 
         $sql = "INSERT INTO producto 
                 (nombre_producto, precio_producto, cantidad_existente, presentacion_producto,
-                fecha_caducidad, id_proveedor, necesita_receta)
-                VALUES (:nombre, :precio, :cantidad, :presentacion, :fecha_caducidad, 
+                id_proveedor, necesita_receta)
+                VALUES (:nombre, :precio, :cantidad, :presentacion, 
                         :id_proveedor, :necesita_receta)";
 
         $stmt = $this->db->prepare($sql);
@@ -41,7 +41,6 @@ class EmpleadoModel {
         $stmt->bindParam(':precio', $precio);
         $stmt->bindParam(':cantidad', $cantidad);
         $stmt->bindParam(':presentacion', $presentacion);
-        $stmt->bindParam(':fecha_caducidad', $fecha_caducidad);
         $stmt->bindParam(':id_proveedor', $id_proveedor);
         $stmt->bindParam(':necesita_receta', $necesita_receta);
 
@@ -87,8 +86,8 @@ class EmpleadoModel {
             // -------------- 1) INSERTAR PRODUCTO --------------------
             $sqlProducto = "INSERT INTO producto 
                 (nombre_producto, presentacion_producto, precio_producto, cantidad_existente, 
-                fecha_caducidad, id_proveedor, necesita_receta)
-                VALUES (:nombre, :presentacion, :precio, :cantidad, :caducidad, :proveedor, :receta)";
+                id_proveedor, necesita_receta)
+                VALUES (:nombre, :presentacion, :precio, :cantidad, :proveedor, :receta)";
 
             $stmt = $this->db->prepare($sqlProducto);
             $stmt->execute([
@@ -96,7 +95,6 @@ class EmpleadoModel {
                 ':presentacion' => $data['presentacion'],
                 ':precio'       => $data['precio'],
                 ':cantidad'     => $data['cantidad'],
-                ':caducidad'    => $data['caducidad'],
                 ':proveedor'    => $data['proveedor'],
                 ':receta'       => $data['receta']
             ]);
@@ -464,7 +462,6 @@ class EmpleadoModel {
                 $precio = (float)$producto['precio'];
                 $nombre = $producto['nombre'] ?? '';
                 $presentacion = $producto['presentacion'] ?? null;
-                $fechaCaducidad = $producto['fecha_caducidad'] ?? null;
                 $necesitaReceta = isset($producto['necesita_receta']) ? (int)$producto['necesita_receta'] : 0;
 
                 if (empty($nombre) || $precio <= 0 || $cantidad <= 0) {
@@ -478,7 +475,6 @@ class EmpleadoModel {
                         $precio,
                         $cantidad,
                         $presentacion,
-                        $fechaCaducidad,
                         $idProveedor,
                         $necesitaReceta
                     );

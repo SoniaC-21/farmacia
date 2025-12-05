@@ -59,7 +59,6 @@
                 <th>Presentación</th>
                 <th>Precio</th>
                 <th>Existencia</th>
-                <th>Caducidad</th>
                 <th>Requiere Receta</th>
             </tr>
 
@@ -71,7 +70,6 @@
                         <td><?php echo htmlspecialchars($p['presentacion_producto']); ?></td>
                         <td>$<?php echo number_format($p['precio_producto'], 2); ?></td>
                         <td><?php echo htmlspecialchars($p['cantidad_existente']); ?></td>
-                        <td><?php echo htmlspecialchars($p['fecha_caducidad']); ?></td>
                         <td>
                             <?php 
                                 if ($p['necesita_receta'] == 1) {
@@ -86,7 +84,7 @@
 
             <?php else: ?>
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:10px;">
+                    <td colspan="5" style="text-align:center; padding:10px;">
                         No se encontraron productos con ese nombre
                     </td>
                 </tr>
