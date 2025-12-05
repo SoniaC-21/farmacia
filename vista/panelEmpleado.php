@@ -46,14 +46,13 @@
                             <th>Presentación</th>
                             <th>Precio</th>
                             <th>Cantidad</th>
-                            <th>Fecha Caducidad</th>
                             <th>Requiere Receta</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyInventario">
                         <tr>
-                            <td colspan="8" style="text-align: center;">Cargando productos...</td>
+                            <td colspan="7" style="text-align: center;">Cargando productos...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -129,15 +128,9 @@
                         <input type="number" id="precioProducto" step="0.01" min="0" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cantidad Existente *</label>
-                        <input type="number" id="cantidadProducto" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Fecha de Caducidad</label>
-                        <input type="date" id="fechaCaducidadProducto">
-                    </div>
+                <div class="form-group">
+                    <label>Cantidad Existente *</label>
+                    <input type="number" id="cantidadProducto" min="0" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -181,39 +174,39 @@
                     </select>
                 </div>
 
-                <h3>Datos del Producto</h3>
                 <div class="form-group">
-                    <label>Nombre del Producto *</label>
-                    <input type="text" id="nombreProductoCompra" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Presentación</label>
-                        <input type="text" id="presentacionProductoCompra" placeholder="Ej: Caja de 20, Frasco 100ml">
+                    <label>Seleccionar Producto *</label>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto; margin-top: 10px;">
+                        <table id="tablaProductosCompra" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">Seleccionar</th>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Presentación</th>
+                                    <th>Precio</th>
+                                    <th>Stock Actual</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyProductosCompra">
+                                <tr>
+                                    <td colspan="6" style="text-align: center;">Cargando productos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="form-group">
-                        <label>Precio *</label>
-                        <input type="number" id="precioProductoCompra" step="0.01" min="0" required>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cantidad *</label>
-                        <input type="number" id="cantidadProductoCompra" min="1" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Fecha de Caducidad</label>
-                        <input type="date" id="fechaCaducidadProductoCompra">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center;">
-                        <input type="checkbox" id="necesitaRecetaProductoCompra" style="width: auto; margin-right: 10px;">
-                        Requiere Receta Médica
-                    </label>
+                    <div id="infoProductoSeleccionado"></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Registrar Compra</button>
+                <div class="form-group">
+                    <label>Cantidad Comprada *</label>
+                    <input type="number" id="cantidadProductoCompra" min="1" required>
+                    <small style="color: #666; display: block; margin-top: 5px;">La cantidad será sumada al stock actual del producto seleccionado</small>
+                </div>
+
+                <input type="hidden" id="productoSeleccionadoCompra" value="">
+
+                <button type="submit" class="btn btn-primary">Agregar Compra</button>
             </form>
         </div>
 
@@ -369,6 +362,7 @@
                 }
                 else if (section === 'agregarCompra') {
                     cargarProveedoresParaCompra();
+                    cargarProductosParaCompra();
                 }
 
             });
@@ -402,12 +396,11 @@
             const tbody = document.getElementById('tbodyInventario');
             
             if (productos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay productos registrados</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay productos registrados</td></tr>';
                 return;
             }
             
             tbody.innerHTML = productos.map(producto => {
-                const fechaCaducidad = producto.fecha_caducidad ? new Date(producto.fecha_caducidad).toLocaleDateString('es-ES') : '-';
                 const requiereReceta = producto.necesita_receta == 1 || producto.necesita_receta == '1' ? 'Sí' : 'No';
                 
                 return `
@@ -422,7 +415,6 @@
                                data-id="${producto.id_producto}" min="0" 
                                onchange="actualizarStock(${producto.id_producto}, this.value)">
                     </td>
-                    <td>${fechaCaducidad}</td>
                     <td>${requiereReceta}</td>
                     <td class="actions-cell">
                         <button class="btn btn-danger btn-small" onclick="eliminarProducto(${producto.id_producto})">Eliminar</button>
@@ -740,15 +732,11 @@
             const precio = document.getElementById('precioProducto').value;
             const cantidad = document.getElementById('cantidadProducto').value;
             const presentacion = document.getElementById('presentacionProducto').value;
-            const fechaCaducidad = document.getElementById('fechaCaducidadProducto').value;
             const idProveedor = document.getElementById('idProveedorProducto').value;
             const necesitaReceta = document.getElementById('necesitaRecetaProducto').checked;
             
             let body = `accion=agregar_producto&nombre=${encodeURIComponent(nombre)}&precio=${precio}&cantidad=${cantidad}&presentacion=${encodeURIComponent(presentacion)}`;
             
-            if (fechaCaducidad) {
-                body += `&fecha_caducidad=${fechaCaducidad}`;
-            }
             if (idProveedor) {
                 body += `&id_proveedor=${idProveedor}`;
             }
@@ -1042,17 +1030,73 @@
             });
         }
 
+        // Cargar productos para compra
+        function cargarProductosParaCompra() {
+            fetch('../controlador/panelEmpleadoControler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'accion=obtener_productos'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarProductosParaCompra(data.data);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Mostrar productos en tabla para compra
+        function mostrarProductosParaCompra(productos) {
+            const tbody = document.getElementById('tbodyProductosCompra');
+            
+            if (productos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay productos registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = productos.map(producto => {
+                return `
+                <tr>
+                    <td style="text-align: center;">
+                        <input type="radio" name="productoCompraRadio" 
+                               value="${producto.id_producto}" 
+                               data-nombre="${producto.nombre_producto.replace(/"/g, '&quot;')}"
+                               data-precio="${producto.precio_producto}"
+                               data-stock="${producto.cantidad_existente}"
+                               onchange="seleccionarProductoCompra(${producto.id_producto}, '${producto.nombre_producto.replace(/'/g, "\\'")}', ${producto.precio_producto}, ${producto.cantidad_existente})">
+                    </td>
+                    <td>${producto.id_producto}</td>
+                    <td>${producto.nombre_producto}</td>
+                    <td>${producto.presentacion_producto || '-'}</td>
+                    <td>$${parseFloat(producto.precio_producto || 0).toFixed(2)}</td>
+                    <td>${producto.cantidad_existente || 0}</td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        // Seleccionar producto para compra
+        function seleccionarProductoCompra(id, nombre, precio, stock) {
+            document.getElementById('productoSeleccionadoCompra').value = id;
+            // Opcional: mostrar información del producto seleccionado
+            const infoDiv = document.getElementById('infoProductoSeleccionado');
+            if (infoDiv) {
+                infoDiv.innerHTML = `<p style="margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 4px;">
+                    <strong>Producto seleccionado:</strong> ${nombre} | Precio: $${parseFloat(precio).toFixed(2)} | Stock actual: ${stock}
+                </p>`;
+            }
+        }
+
         // Formulario agregar compra
         document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
             e.preventDefault();
 
             const idProveedor = document.getElementById('proveedorCompra').value;
-            const nombre = document.getElementById('nombreProductoCompra').value.trim();
-            const precio = parseFloat(document.getElementById('precioProductoCompra').value);
+            const idProducto = document.getElementById('productoSeleccionadoCompra').value;
             const cantidad = parseInt(document.getElementById('cantidadProductoCompra').value);
-            const presentacion = document.getElementById('presentacionProductoCompra').value.trim();
-            const fechaCaducidad = document.getElementById('fechaCaducidadProductoCompra').value;
-            const necesitaReceta = document.getElementById('necesitaRecetaProductoCompra').checked;
 
             // Validaciones
             if (!idProveedor) {
@@ -1060,41 +1104,63 @@
                 return;
             }
 
-            if (!nombre || !precio || precio <= 0 || !cantidad || cantidad <= 0) {
-                mostrarAlerta('alert-agregar-compra', 'Por favor complete todos los campos obligatorios (Nombre, Precio y Cantidad)', 'error');
+            if (!idProducto) {
+                mostrarAlerta('alert-agregar-compra', 'Debe seleccionar un producto de la lista', 'error');
                 return;
             }
 
-            // Preparar datos del producto
-            const producto = {
-                id_producto: null,
-                nombre: nombre,
-                precio: precio,
-                cantidad: cantidad,
-                presentacion: presentacion || '',
-                fecha_caducidad: fechaCaducidad || null,
-                necesita_receta: necesitaReceta ? 1 : 0
-            };
+            if (!cantidad || cantidad <= 0) {
+                mostrarAlerta('alert-agregar-compra', 'La cantidad debe ser mayor a 0', 'error');
+                return;
+            }
 
-            const formData = new FormData();
-            formData.append('accion', 'registrar_compra_completa');
-            formData.append('id_proveedor', idProveedor);
-            formData.append('productos', JSON.stringify([producto]));
-
+            // Obtener información del producto seleccionado desde la base de datos
             fetch('../controlador/panelEmpleadoControler.php', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `accion=obtener_productos`
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    mostrarAlerta('alert-agregar-compra', 'Compra agregada exitosamente', 'success');
+                    const producto = data.data.find(p => p.id_producto == idProducto);
+                    if (!producto) {
+                        mostrarAlerta('alert-agregar-compra', 'Producto no encontrado', 'error');
+                        return;
+                    }
+
+                    // Preparar datos del producto
+                    const productoCompra = {
+                        id_producto: parseInt(idProducto),
+                        nombre: producto.nombre_producto,
+                        precio: parseFloat(producto.precio_producto),
+                        cantidad: cantidad
+                    };
+
+                    const formData = new FormData();
+                    formData.append('accion', 'registrar_compra_completa');
+                    formData.append('id_proveedor', idProveedor);
+                    formData.append('productos', JSON.stringify([productoCompra]));
+
+                    return fetch('../controlador/panelEmpleadoControler.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+            })
+            .then(response => response ? response.json() : null)
+            .then(data => {
+                if (data && data.success) {
+                    mostrarAlerta('alert-agregar-compra', 'Compra agregada exitosamente. El stock ha sido actualizado.', 'success');
                     
                     // Limpiar formulario pero mantener en la misma página
                     document.getElementById('formAgregarCompra').reset();
-                    // Recargar proveedores para mantener el select actualizado
+                    document.getElementById('productoSeleccionadoCompra').value = '';
+                    document.getElementById('infoProductoSeleccionado').innerHTML = '';
+                    // Recargar productos y proveedores para mantener los datos actualizados
                     cargarProveedoresParaCompra();
-                } else {
+                    cargarProductosParaCompra();
+                } else if (data) {
                     mostrarAlerta('alert-agregar-compra', data.message || 'Error al registrar compra', 'error');
                 }
             })

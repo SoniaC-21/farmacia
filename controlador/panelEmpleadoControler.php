@@ -91,7 +91,6 @@
             $cantidad = $_POST['cantidad'];
 
             $presentacion = $_POST['presentacion'] ?? null;
-            $fechaCaducidad = $_POST['fecha_caducidad'] ?? null;
             $idProveedor = $_POST['id_proveedor'] ?? null;
             $receta = isset($_POST['necesita_receta']) ? 1 : 0;
 
@@ -100,7 +99,6 @@
                 $precio,
                 $cantidad,
                 $presentacion,
-                $fechaCaducidad,
                 $idProveedor,
                 $receta
             );
