@@ -13,7 +13,8 @@
     $model = new EmpleadoModel();
 
     // Validar acción
-    if (!isset($_POST['accion'])) {
+    if (!isset($_POST['accion'])) 
+    {
         echo json_encode(["success" => false, "message" => "No se especificó acción"]);
         exit();
     }
