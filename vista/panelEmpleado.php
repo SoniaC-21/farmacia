@@ -156,13 +156,6 @@
 
             <form id="formAgregarCompra">
                 <div class="form-group">
-                    <label>Proveedor *</label>
-                    <select id="proveedorCompra" required>
-                        <option value="">Seleccione un proveedor...</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <label>Seleccionar Producto *</label>
                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto; margin-top: 10px;">
                         <table id="tablaProductosCompra" style="width: 100%; border-collapse: collapse;">
@@ -349,7 +342,6 @@
                     actualizarListaProductosVenta();
                 }
                 else if (section === 'agregarCompra') {
-                    cargarProveedoresParaCompra();
                     cargarProductosParaCompra();
                 }
 
@@ -993,31 +985,6 @@
             });
         });
 
-        // Cargar proveedores para compra
-        function cargarProveedoresParaCompra() {
-            fetch('../controlador/panelEmpleadoControler.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'accion=obtener_proveedores'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const select = document.getElementById('proveedorCompra');
-                    select.innerHTML = '<option value="">Seleccione un proveedor...</option>';
-                    data.data.forEach(proveedor => {
-                        const option = document.createElement('option');
-                        option.value = proveedor.id_proveedor;
-                        option.textContent = `${proveedor.nombre_proveedor} (${proveedor.email_proveedor || 'Sin email'})`;
-                        select.appendChild(option);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        }
-
         // Cargar productos para compra
         function cargarProductosParaCompra() {
             fetch('../controlador/panelEmpleadoControler.php', {
@@ -1082,16 +1049,10 @@
         document.getElementById('formAgregarCompra').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const idProveedor = document.getElementById('proveedorCompra').value;
             const idProducto = document.getElementById('productoSeleccionadoCompra').value;
             const cantidad = parseInt(document.getElementById('cantidadProductoCompra').value);
 
             // Validaciones
-            if (!idProveedor) {
-                mostrarAlerta('alert-agregar-compra', 'Debe seleccionar un proveedor', 'error');
-                return;
-            }
-
             if (!idProducto) {
                 mostrarAlerta('alert-agregar-compra', 'Debe seleccionar un producto de la lista', 'error');
                 return;
@@ -1127,7 +1088,7 @@
 
                     const formData = new FormData();
                     formData.append('accion', 'registrar_compra_completa');
-                    formData.append('id_proveedor', idProveedor);
+                    formData.append('id_proveedor', ''); // Proveedor opcional, se envía vacío
                     formData.append('productos', JSON.stringify([productoCompra]));
 
                     return fetch('../controlador/panelEmpleadoControler.php', {
@@ -1145,8 +1106,7 @@
                     document.getElementById('formAgregarCompra').reset();
                     document.getElementById('productoSeleccionadoCompra').value = '';
                     document.getElementById('infoProductoSeleccionado').innerHTML = '';
-                    // Recargar productos y proveedores para mantener los datos actualizados
-                    cargarProveedoresParaCompra();
+                    // Recargar productos para mantener los datos actualizados
                     cargarProductosParaCompra();
                 } else if (data) {
                     mostrarAlerta('alert-agregar-compra', data.message || 'Error al registrar compra', 'error');

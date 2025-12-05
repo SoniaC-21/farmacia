@@ -475,7 +475,7 @@ class EmpleadoModel {
                         $precio,
                         $cantidad,
                         $presentacion,
-                        $idProveedor,
+                        $idProveedor, // Puede ser null
                         $necesitaReceta
                     );
 
@@ -514,6 +514,32 @@ class EmpleadoModel {
 
             if ($total <= 0) {
                 throw new Exception("El total de la compra debe ser mayor a 0");
+            }
+
+            // Si no hay proveedor, obtener o crear un proveedor genérico
+            if ($idProveedor === null || $idProveedor === '' || $idProveedor === 0) {
+                // Intentar obtener un proveedor genérico "Sin especificar"
+                $stmt = $this->db->prepare("SELECT id_proveedor FROM proveedor WHERE nombre_proveedor = 'Sin especificar' LIMIT 1");
+                $stmt->execute();
+                $proveedorGenerico = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($proveedorGenerico) {
+                    $idProveedor = $proveedorGenerico['id_proveedor'];
+                } else {
+                    // Si no existe, obtener el primer proveedor disponible
+                    $stmt = $this->db->prepare("SELECT id_proveedor FROM proveedor ORDER BY id_proveedor ASC LIMIT 1");
+                    $stmt->execute();
+                    $primerProveedor = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($primerProveedor) {
+                        $idProveedor = $primerProveedor['id_proveedor'];
+                    } else {
+                        // Si no hay proveedores, crear uno genérico
+                        $stmt = $this->db->prepare("INSERT INTO proveedor (nombre_proveedor, email_proveedor) VALUES ('Sin especificar', 'sin_especificar@farmacia.com')");
+                        $stmt->execute();
+                        $idProveedor = $this->db->lastInsertId();
+                    }
+                }
             }
 
             // Insertar compra
