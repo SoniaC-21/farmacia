@@ -13,7 +13,8 @@
     $model = new EmpleadoModel();
 
     // Validar acción
-    if (!isset($_POST['accion'])) {
+    if (!isset($_POST['accion'])) 
+    {
         echo json_encode(["success" => false, "message" => "No se especificó acción"]);
         exit();
     }
@@ -186,12 +187,12 @@
             break;
 
         case 'registrar_compra_completa':
-            $idProveedor = $_POST['id_proveedor'] ?? 0;
+            $idProveedor = $_POST['id_proveedor'] ?? null;
             $productos = json_decode($_POST['productos'], true) ?? [];
 
-            if ($idProveedor <= 0) {
-                echo json_encode(["success" => false, "message" => "Debe seleccionar un proveedor"]);
-                exit();
+            // Convertir a null si está vacío o es 0
+            if (empty($idProveedor) || $idProveedor == 0 || $idProveedor == '') {
+                $idProveedor = null;
             }
 
             if (empty($productos)) {
