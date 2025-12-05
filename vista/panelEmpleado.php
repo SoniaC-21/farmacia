@@ -156,18 +156,6 @@
 
             <form id="formAgregarCompra">
                 <div class="form-group">
-                    <label>Fecha de Compra *</label>
-                    <input type="date" id="fechaCompra" required>
-                </div>
-
-                <div class="form-group">
-                    <label>ID Proveedor *</label>
-                    <input type="number" id="idProveedorCompra" min="1" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Total de Compra *</label>
-                    <input type="number" id="totalCompra" step="0.01" min="0" required>
                     <label>Proveedor *</label>
                     <select id="proveedorCompra" required>
                         <option value="">Seleccione un proveedor...</option>
@@ -1421,10 +1409,7 @@
             }
         });
 
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/brandon
         // Cargar inventario al iniciar
         cargarInventario();
     </script>
